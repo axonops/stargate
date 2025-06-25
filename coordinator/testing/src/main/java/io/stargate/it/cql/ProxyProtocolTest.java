@@ -20,7 +20,6 @@ import io.stargate.it.proxy.ProxyContactPointResolver;
 import io.stargate.it.proxy.ProxyExtension;
 import io.stargate.it.proxy.ProxySpec;
 import io.stargate.it.proxy.SkipIfProxyDnsInvalid;
-import io.stargate.it.storage.SkipWhenNotDse;
 import io.stargate.it.storage.StargateParameters;
 import io.stargate.it.storage.StargateSpec;
 import java.net.InetAddress;
@@ -37,7 +36,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-@SkipWhenNotDse
 @SkipIfProxyDnsInvalid
 @StargateSpec(parametersCustomizer = "buildParameters")
 @CqlSessionSpec(contactPointResolver = ProxyContactPointResolver.class)

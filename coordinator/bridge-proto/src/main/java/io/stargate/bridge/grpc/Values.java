@@ -25,6 +25,7 @@ import io.stargate.bridge.proto.QueryOuterClass.Value;
 import io.stargate.bridge.proto.QueryOuterClass.Value.InnerCase;
 import io.stargate.bridge.proto.QueryOuterClass.Value.Null;
 import io.stargate.bridge.proto.QueryOuterClass.Value.Unset;
+import io.stargate.bridge.proto.QueryOuterClass.Vector;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -176,6 +177,24 @@ public class Values {
         .build();
   }
 
+  public static Value vector(float... values) {
+    return Value.newBuilder()
+        .setVector(Vector.newBuilder().addAllValues(floatArrayToList(values)).build())
+        .build();
+  }
+
+  public static Value vector(List<Float> values) {
+    return Value.newBuilder().setVector(Vector.newBuilder().addAllValues(values).build()).build();
+  }
+
+  private static List<Float> floatArrayToList(float[] values) {
+    List<Float> list = new java.util.ArrayList<>(values.length);
+    for (float value : values) {
+      list.add(value);
+    }
+    return list;
+  }
+
   public static boolean bool(Value value) {
     checkInnerCase(value, InnerCase.BOOLEAN);
 
@@ -317,6 +336,23 @@ public class Values {
 
     QueryOuterClass.Duration duration = value.getDuration();
     return CqlDuration.newInstance(duration.getMonths(), duration.getDays(), duration.getNanos());
+  }
+
+  public static List<Float> vector(Value value) {
+    checkInnerCase(value, InnerCase.VECTOR);
+
+    return value.getVector().getValuesList();
+  }
+
+  public static float[] vectorArray(Value value) {
+    checkInnerCase(value, InnerCase.VECTOR);
+
+    List<Float> values = value.getVector().getValuesList();
+    float[] array = new float[values.size()];
+    for (int i = 0; i < values.size(); i++) {
+      array[i] = values.get(i);
+    }
+    return array;
   }
 
   private static void checkInnerCase(Value value, InnerCase expected) {

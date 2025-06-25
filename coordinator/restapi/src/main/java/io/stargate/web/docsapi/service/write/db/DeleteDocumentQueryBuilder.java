@@ -28,7 +28,7 @@ public class DeleteDocumentQueryBuilder extends AbstractDeleteQueryBuilder {
 
   /** {@inheritDoc} */
   @Override
-  protected Consumer<QueryBuilder.QueryBuilder__40> whereConsumer() {
+  protected Consumer<QueryBuilder> whereConsumer() {
     return where -> {};
   }
 }

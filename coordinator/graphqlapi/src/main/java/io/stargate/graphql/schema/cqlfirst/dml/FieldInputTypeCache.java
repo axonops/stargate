@@ -63,6 +63,9 @@ class FieldInputTypeCache extends FieldTypeCache<GraphQLInputType> {
       List<GraphQLType> subTypes =
           columnType.parameters().stream().map(this::get).collect(Collectors.toList());
       return new TupleBuilder(subTypes).buildInputType();
+    } else if (isVector(columnType)) {
+      // Vector types are handled as scalars
+      return getScalar(Column.Type.Vector);
     } else {
       return getScalar(columnType.rawType());
     }

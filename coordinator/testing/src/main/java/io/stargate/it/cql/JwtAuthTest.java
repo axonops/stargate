@@ -132,11 +132,6 @@ public class JwtAuthTest extends BaseIntegrationTest {
       String errorMessage =
           "User web_user has no CREATE permission on <keyspace ks_\\d*_JwtAuthTest> or any of its parents";
 
-      if (backend.isDse()) {
-        errorMessage =
-            "User web_user has no CREATE permission on <all tables in ks_\\d*_JwtAuthTest> or any of its parents";
-      }
-
       assertThatThrownBy(
               () ->
                   tokenSession.execute(
@@ -186,11 +181,6 @@ public class JwtAuthTest extends BaseIntegrationTest {
       String errorMessage =
           "User web_user has no MODIFY permission on <table ks_\\d*_JwtAuthTest.jwt_auth_test> or any of its parents";
 
-      if (backend.isDse()) {
-        errorMessage =
-            "User web_user has no UPDATE permission on <table ks_\\d*_JwtAuthTest.jwt_auth_test> or any of its parents";
-      }
-
       assertThatThrownBy(() -> tokenSession.execute(prepared.bind("foo", "bar")))
           .isInstanceOf(UnauthorizedException.class)
           .hasMessageMatching(errorMessage);
@@ -230,11 +220,6 @@ public class JwtAuthTest extends BaseIntegrationTest {
 
       String errorMessage =
           "User web_user has no MODIFY permission on <table ks_\\d*_JwtAuthTest.jwt_auth_test> or any of its parents";
-
-      if (backend.isDse()) {
-        errorMessage =
-            "User web_user has no UPDATE permission on <table ks_\\d*_JwtAuthTest.jwt_auth_test> or any of its parents";
-      }
 
       assertThatThrownBy(
               () ->
@@ -306,11 +291,6 @@ public class JwtAuthTest extends BaseIntegrationTest {
 
       String errorMessage =
           "User web_user has no MODIFY permission on <table ks_\\d*_JwtAuthTest.jwt_auth_test> or any of its parents";
-
-      if (backend.isDse()) {
-        errorMessage =
-            "User web_user has no UPDATE permission on <table ks_\\d*_JwtAuthTest.jwt_auth_test> or any of its parents";
-      }
 
       assertThatThrownBy(
               () ->

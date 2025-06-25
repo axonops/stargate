@@ -76,16 +76,13 @@ The table below lists the configurable values supported by this chart:
 |--------------------------------------------|-----------------------------------------------------------------------------------------------------------------|----------------------------------------------------------|
 | `replicaCount` | Coordinator replica count. This is also the replication for CQL, Auth and GRPC end points.                      | `2`                                                      |
 | `image.registry`              | Repo from where images are retrieved                                                                            | `docker.io`                                              |
-| `image.repository311`        | Coordinator image if persistence layer is Apache Cassandra 3.11                                          | `stargateio/coordinator-3_11`                            | 
-| `image.repository40`              | Coordinator image if persistence layer is Apache Cassandra 4.0                                           | `stargateio/coordinator-4_0`                             |
-| `image.repositoryDse68`              | Coordinator image if persistence layer is DataStax Enterprise 6.8                                        | `stargateio/coordinator-dse-68`                          |
+| `image.repository50`              | Coordinator image if persistence layer is Apache Cassandra 4.0                                           | `stargateio/coordinator-5_0`                             |
 | `image.tag`                  | Coordinator image tag                                                                                    | `v2`                                                     |
 | `cassandra.clusterName`                  | Deployed Cassandra cluster name                                                                                 | `cassandra`                                              |
 | `cassandra.dcName`                  | Deployed Cassandra datacenter name                                                                              | `datacenter1`                                            |
 | `cassandra.rack`                  | Deployed Cassandra rack                                                                                         | `rack1`                                                  |
 | `cassandra.seed`                  | Headless service name that corresponds to Cassandra's storage port (7000)                                       | `my-release-cassandra-headless.default.svc.cluster.local` |
-| `cassandra.isDse`                  | Set to true if DSE is used                                                                                      | `false`                                                  |
-| `cassandra.clusterVersion`                  | Cluster version is set as 3.11 for Cassandra 3x version, 4.0 for Cassandra 4x version and 6.8 for DSE Cassandra | `4.0`                                                    |
+| `cassandra.clusterVersion`                  | Cluster version is set as 5.0 for Cassandra xx version | `5.0`                                                    |
 | `topologyKey` | K8s node label to which Stargate Coordinator can be deployed                                                    | `kubernetes.io/hostname`                                 |
 | `cpuReqMillicores`                  | CPU request unit for Coordinator                                                                                | `2000`                                                   |
 | `heapMB`                  | Memory request unit for Coordinator in MB                                                                       | `2048`                                                   |

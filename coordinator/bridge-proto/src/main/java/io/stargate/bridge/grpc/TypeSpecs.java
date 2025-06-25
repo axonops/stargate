@@ -21,6 +21,7 @@ import io.stargate.bridge.proto.QueryOuterClass.TypeSpec.Map;
 import io.stargate.bridge.proto.QueryOuterClass.TypeSpec.Set;
 import io.stargate.bridge.proto.QueryOuterClass.TypeSpec.Tuple;
 import io.stargate.bridge.proto.QueryOuterClass.TypeSpec.Udt;
+import io.stargate.bridge.proto.QueryOuterClass.TypeSpec.Vector;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
@@ -51,6 +52,7 @@ public class TypeSpecs {
   public static final TypeSpec LINESTRING = buildFromBasic(TypeSpec.Basic.LINESTRING);
   public static final TypeSpec POINT = buildFromBasic(TypeSpec.Basic.POINT);
   public static final TypeSpec POLYGON = buildFromBasic(TypeSpec.Basic.POLYGON);
+  public static final TypeSpec VECTOR = buildFromBasic(TypeSpec.Basic.VECTOR);
 
   public static TypeSpec list(TypeSpec element) {
     return TypeSpec.newBuilder().setList(List.newBuilder().setElement(element)).build();
@@ -102,6 +104,12 @@ public class TypeSpecs {
     return TypeSpec.newBuilder().setTuple(builder).build();
   }
 
+  public static TypeSpec vector(TypeSpec element, int size) {
+    return TypeSpec.newBuilder()
+        .setVector(Vector.newBuilder().setElement(element).setSize(size))
+        .build();
+  }
+
   public static boolean isCollection(TypeSpec type) {
     switch (type.getSpecCase()) {
       case LIST:
@@ -140,6 +148,9 @@ public class TypeSpecs {
         return tuple.getElementsList().stream()
             .map(TypeSpecs::format)
             .collect(Collectors.joining(",", "tuple<", ">"));
+      case VECTOR:
+        Vector vector = type.getVector();
+        return String.format("vector<%s, %d>", format(vector.getElement()), vector.getSize());
       default:
         throw new IllegalArgumentException("Unsupported type " + type.getSpecCase());
     }
@@ -237,6 +248,37 @@ public class TypeSpecs {
       } else if ("tuple".equalsIgnoreCase(baseTypeName)) {
         return TypeSpec.newBuilder()
             .setTuple(Tuple.newBuilder().addAllElements(parameters))
+            .build();
+      } else if ("vector".equalsIgnoreCase(baseTypeName)) {
+        // For vector types, we need special handling because the second parameter is a size
+        // (integer),
+        // not a type. We'll parse the parameters string directly for this case.
+        int commaIdx = paramsString.indexOf(',');
+        if (commaIdx < 0) {
+          throw new IllegalArgumentException("Malformed type name: vector requires two parameters");
+        }
+
+        String elementTypeStr = paramsString.substring(0, commaIdx).trim();
+        String sizeStr = paramsString.substring(commaIdx + 1).trim();
+
+        // Parse the element type
+        TypeSpec elementType = parse(elementTypeStr, udts, strict);
+
+        // Parse the size
+        int size;
+        try {
+          size = Integer.parseInt(sizeStr);
+          if (size <= 0) {
+            throw new IllegalArgumentException("Vector size must be positive");
+          }
+        } catch (NumberFormatException e) {
+          throw new IllegalArgumentException(
+              String.format(
+                  "Malformed type name: vector size must be an integer, got '%s'", sizeStr));
+        }
+
+        return TypeSpec.newBuilder()
+            .setVector(Vector.newBuilder().setElement(elementType).setSize(size))
             .build();
       } else {
         throw new IllegalArgumentException(
@@ -400,6 +442,8 @@ public class TypeSpecs {
         return type.getUdt().getFrozen();
       case TUPLE:
         return true;
+      case VECTOR:
+        return false; // vectors are never frozen
       default:
         return false;
     }
@@ -443,6 +487,9 @@ public class TypeSpecs {
         return udt.getFrozen() == newFrozen
             ? type
             : TypeSpec.newBuilder().setUdt(udt.toBuilder().setFrozen(newFrozen)).build();
+      case VECTOR:
+        // Vectors can't be frozen, always return as-is
+        return type;
       default:
         return type;
     }

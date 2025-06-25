@@ -5,7 +5,7 @@
   <parent>
     <groupId>io.stargate</groupId>
     <artifactId>stargate</artifactId>
-    <version>2.0.34-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
   </parent>
   <!-- Artifact props -->
   <groupId>io.stargate.bridge</groupId>
@@ -106,53 +106,13 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <configuration>
-          <unpackBundle>true</unpackBundle>
-          <instructions>
-            <Bundle-Name>gRPC-bridge</Bundle-Name>
-            <Bundle-Description>gRPC bridge for Stargate</Bundle-Description>
-            <Bundle-SymbolicName>io.stargate.bridge</Bundle-SymbolicName>
-            <Bundle-Activator>io.stargate.bridge.BridgeActivator</Bundle-Activator>
-            <Import-Package><![CDATA[
-                            org.slf4j,
-                            org.slf4j.helpers,
-                            org.slf4j.spi,
-                            org.osgi.framework,
-                            io.stargate.core.*,
-                            io.stargate.auth,
-                            io.stargate.auth.*,
-                            io.stargate.db,
-                            io.stargate.db.*,
-                            org.apache.cassandra.stargate,
-                            org.apache.cassandra.stargate.*,
-                            org.javatuples,
-                            com.datastax.oss.driver.api.core,
-                            com.datastax.oss.driver.api.core.*,
-                            com.datastax.oss.driver.shaded.guava.*,
-                            com.codahale.metrics,
-                            com.codahale.metrics.*,
-                            !io.micrometer.core.instrument.binder.grpc,
-                            io.micrometer.core.instrument
-                        ]]></Import-Package>
-            <Export-Package>!*</Export-Package>
-            <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
-            <Embed-Transitive>true</Embed-Transitive>
-          </instructions>
-          <buildDirectory>${project.basedir}/../stargate-lib</buildDirectory>
-        </configuration>
-      </plugin>
-      <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
           <archive>
-            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
             <manifestEntries>
               <x-Stargate-Health-Checkers>bridge</x-Stargate-Health-Checkers>
             </manifestEntries>
           </archive>
-          <outputDirectory>${project.basedir}/../stargate-lib</outputDirectory>
         </configuration>
       </plugin>
     </plugins>

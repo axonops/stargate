@@ -51,16 +51,20 @@ public class BulkInsertMutationFetcher extends BulkMutationFetcher {
     List<Map<String, Object>> valuesToInsert = environment.getArgument("values");
     List<BoundQuery> boundQueries = new ArrayList<>(valuesToInsert.size());
     for (Map<String, Object> value : valuesToInsert) {
-      BoundQuery query =
+      Integer ttl = getTTL(environment);
+      var queryBuilder =
           context
               .getDataStore()
               .queryBuilder()
               .insertInto(table.keyspace(), table.name())
               .value(buildInsertValues(value))
-              .ifNotExists(ifNotExists)
-              .ttl(getTTL(environment))
-              .build()
-              .bind();
+              .ifNotExists(ifNotExists);
+
+      if (ttl != null) {
+        queryBuilder = queryBuilder.ttl(ttl);
+      }
+
+      BoundQuery query = queryBuilder.build().bind();
 
       context
           .getAuthorizationService()

@@ -31,7 +31,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.osgi.framework.Bundle;
 
 @Produces(MediaType.TEXT_HTML)
 @Path("/playground")
@@ -41,10 +40,14 @@ public class PlaygroundResource {
   private final String playgroundFile;
 
   @Inject
-  public PlaygroundResource(Bundle bundle) throws IOException {
+  public PlaygroundResource() throws IOException {
     // From
     // https://raw.githubusercontent.com/prisma-labs/graphql-playground/master/packages/graphql-playground-html/withAnimation.html
-    URL entry = bundle.getEntry("/playground.html");
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    URL entry = classLoader.getResource("playground.html");
+    if (entry == null) {
+      throw new IOException("Could not find playground.html in classpath");
+    }
     // Save the templated file away for later so that we only have to do this conversion once.
     playgroundFile =
         new BufferedReader(

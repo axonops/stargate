@@ -31,6 +31,7 @@ public record DocumentTablePropertiesImpl(
     String stringValueColumnName,
     String doubleValueColumnName,
     String booleanValueColumnName,
+    String vectorValueColumnName,
     String pathColumnPrefix)
     implements DocumentTableProperties {
 
@@ -55,6 +56,7 @@ public record DocumentTablePropertiesImpl(
         tableConfig.stringValueColumnName(),
         tableConfig.doubleValueColumnName(),
         tableConfig.booleanValueColumnName(),
+        tableConfig.vectorValueColumnName(),
         tableConfig.pathColumnPrefix());
   }
 }

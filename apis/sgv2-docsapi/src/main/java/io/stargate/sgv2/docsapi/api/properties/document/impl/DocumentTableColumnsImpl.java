@@ -60,6 +60,7 @@ public interface DocumentTableColumnsImpl extends DocumentTableColumns {
         .add(table.stringValueColumnName())
         .add(table.doubleValueColumnName())
         .add(table.booleanValueColumnName())
+        .add(table.vectorValueColumnName())
         .build();
   }
 
@@ -159,6 +160,16 @@ public interface DocumentTableColumnsImpl extends DocumentTableColumns {
               .build();
     }
     result.add(booleanValue);
+
+    // vector value
+    // Use proper VECTOR type with configured dimension
+    int vectorDimension = documentConfig().vectorDimension();
+    ImmutableColumn vectorValue =
+        ImmutableColumn.builder()
+            .name(table.vectorValueColumnName())
+            .type(TypeSpecs.format(TypeSpecs.vector(TypeSpecs.FLOAT, vectorDimension)))
+            .build();
+    result.add(vectorValue);
 
     // return unmodifiable
     return Collections.unmodifiableList(result);

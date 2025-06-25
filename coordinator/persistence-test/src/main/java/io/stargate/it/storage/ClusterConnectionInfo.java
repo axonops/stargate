@@ -31,8 +31,6 @@ public interface ClusterConnectionInfo {
 
   String clusterVersion();
 
-  boolean isDse();
-
   String clusterName();
 
   String datacenter();
@@ -45,7 +43,7 @@ public interface ClusterConnectionInfo {
   }
 
   default boolean supportsSAI() {
-    // OSS C* does not support SAI (yet?)
-    return isDse();
+    // Cassandra 5.0 supports SAI
+    return true;
   }
 }

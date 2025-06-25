@@ -75,6 +75,14 @@ public class BridgeProtoTypeTranslator {
           frozen = udtType.getFrozen();
           break;
         }
+      case VECTOR:
+        {
+          QueryOuterClass.TypeSpec.Vector vectorType = type.getVector();
+          desc = "vector<" + cqlTypeFromBridgeTypeSpec(vectorType.getElement(), includeFrozen) 
+              + ", " + vectorType.getSize() + ">";
+          frozen = false; // vectors are never frozen
+          break;
+        }
       case SPEC_NOT_SET:
       default:
         throw new IllegalArgumentException("Undefined/unrecognized TypeSpec: " + type);
@@ -248,6 +256,26 @@ public class BridgeProtoTypeTranslator {
         return QueryOuterClass.TypeSpec.newBuilder().setTuple(tupleType(componentTypes)).build();
       }
 
+      if (type.equalsIgnoreCase("vector")) {
+        if (parameters.size() != 2) {
+          throw new IllegalArgumentException(
+              String.format("Expecting two parameters for vector, got %s", parameters));
+        }
+        QueryOuterClass.TypeSpec elementType = parse(parameters.get(0), false);
+        // Parse the size parameter
+        String sizeStr = parameters.get(1).trim();
+        int size;
+        try {
+          size = Integer.parseInt(sizeStr);
+          if (size <= 0) {
+            throw new IllegalArgumentException("Vector size must be positive");
+          }
+        } catch (NumberFormatException e) {
+          throw new IllegalArgumentException("Vector size must be an integer: " + sizeStr);
+        }
+        return QueryOuterClass.TypeSpec.newBuilder().setVector(vectorType(elementType, size)).build();
+      }
+
       throw new IllegalArgumentException("Could not parse type name '" + toParse + "'");
     }
 
@@ -287,6 +315,14 @@ public class BridgeProtoTypeTranslator {
 
     private static QueryOuterClass.TypeSpec.Udt udtType(String name, boolean frozen) {
       return QueryOuterClass.TypeSpec.Udt.newBuilder().setName(name).setFrozen(frozen).build();
+    }
+
+    private static QueryOuterClass.TypeSpec.Vector vectorType(
+        QueryOuterClass.TypeSpec element, int size) {
+      return QueryOuterClass.TypeSpec.Vector.newBuilder()
+          .setElement(element)
+          .setSize(size)
+          .build();
     }
   }
 

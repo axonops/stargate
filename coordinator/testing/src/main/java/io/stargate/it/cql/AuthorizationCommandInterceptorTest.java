@@ -30,7 +30,7 @@ import io.stargate.it.storage.LogCollector;
 import io.stargate.it.storage.StargateLogExtension;
 import io.stargate.it.storage.StargateParameters;
 import io.stargate.it.storage.StargateSpec;
-import io.stargate.testing.TestingServicesActivator;
+import io.stargate.testing.TestingServicesModule;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.BeforeAll;
@@ -64,8 +64,8 @@ public class AuthorizationCommandInterceptorTest extends BaseIntegrationTest {
   public static void buildParameters(StargateParameters.Builder builder) {
     builder.enableAuth(true);
     builder.putSystemProperties(
-        TestingServicesActivator.AUTHZ_PROCESSOR_PROPERTY,
-        TestingServicesActivator.LOGGING_AUTHZ_PROCESSOR_ID);
+        TestingServicesModule.AUTHZ_PROCESSOR_PROPERTY,
+        TestingServicesModule.LOGGING_AUTHZ_PROCESSOR_ID);
   }
 
   @BeforeEach
@@ -97,29 +97,20 @@ public class AuthorizationCommandInterceptorTest extends BaseIntegrationTest {
             "cassandra, ALLOW, ACCESS, [SELECT], AuthorizedResource{kind=TABLE, keyspace=auth_keyspace2, element=table3}, auth_user1");
   }
 
-  @Test
-  public void grantDescribeAllKeyspaces() {
-    assumeTrue(backend.isDse(), "Test disabled when not running on DSE");
-    assertThat(addedMsgs("GRANT DESCRIBE ON ALL KEYSPACES TO 'auth_user1'"))
-        .containsExactly(
-            "cassandra, ALLOW, ACCESS, [DESCRIBE], AuthorizedResource{kind=KEYSPACE, keyspace=*, element=*}, auth_user1");
-  }
+  // @Test
+  // public void grantDescribeAllKeyspaces() {
+  //   assumeTrue(false, "Test disabled - DSE only feature");
+  // }
 
-  @Test
-  public void revokeDescribeKeyspace() {
-    assumeTrue(backend.isDse(), "Test disabled when not running on DSE");
-    assertThat(removedMsgs("REVOKE DESCRIBE ON KEYSPACE auth_keyspace2 FROM 'auth_user1'"))
-        .containsExactly(
-            "cassandra, ALLOW, ACCESS, [DESCRIBE], AuthorizedResource{kind=KEYSPACE, keyspace=auth_keyspace2, element=*}, auth_user1");
-  }
+  // @Test
+  // public void revokeDescribeKeyspace() {
+  //   assumeTrue(false, "Test disabled - DSE only feature");
+  // }
 
-  @Test
-  public void grantTruncateAllTables() {
-    assumeTrue(backend.isDse(), "Test disabled when not running on DSE");
-    assertThat(addedMsgs("GRANT TRUNCATE ON ALL TABLES IN KEYSPACE auth_keyspace2 TO 'auth_user1'"))
-        .containsExactly(
-            "cassandra, ALLOW, ACCESS, [TRUNCATE], AuthorizedResource{kind=TABLE, keyspace=auth_keyspace2, element=*}, auth_user1");
-  }
+  // @Test
+  // public void grantTruncateAllTables() {
+  //   assumeTrue(false, "Test disabled - DSE only feature");
+  // }
 
   @Test
   public void grantModifyAllKeyspaces() {
@@ -151,18 +142,12 @@ public class AuthorizationCommandInterceptorTest extends BaseIntegrationTest {
 
   @Test
   public void restrictUpdate() {
-    assumeTrue(backend.isDse(), "Test disabled when not running on DSE");
-    assertThat(addedMsgs("RESTRICT UPDATE on table3 TO 'auth_user1'"))
-        .containsExactly(
-            "cassandra, DENY, ACCESS, [UPDATE], AuthorizedResource{kind=TABLE, keyspace=auth_keyspace2, element=table3}, auth_user1");
+    assumeTrue(false, "Test disabled - DSE only feature");
   }
 
   @Test
   public void unrestrictUpdate() {
-    assumeTrue(backend.isDse(), "Test disabled when not running on DSE");
-    assertThat(removedMsgs("UNRESTRICT UPDATE on auth_keyspace2.table3 FROM 'auth_user1'"))
-        .containsExactly(
-            "cassandra, DENY, ACCESS, [UPDATE], AuthorizedResource{kind=TABLE, keyspace=auth_keyspace2, element=table3}, auth_user1");
+    assumeTrue(false, "Test disabled - DSE only feature");
   }
 
   @Test
@@ -181,18 +166,12 @@ public class AuthorizationCommandInterceptorTest extends BaseIntegrationTest {
 
   @Test
   public void grantAuthorizeTruncate(ClusterConnectionInfo backend) {
-    assumeTrue(backend.isDse(), "Test disabled when not running on DSE");
-    assertThat(addedMsgs("GRANT AUTHORIZE FOR SELECT, TRUNCATE on table3 TO 'auth_user1'"))
-        .containsExactly(
-            "cassandra, ALLOW, AUTHORITY, [SELECT, TRUNCATE], AuthorizedResource{kind=TABLE, keyspace=auth_keyspace2, element=table3}, auth_user1");
+    assumeTrue(false, "Test disabled - DSE only feature");
   }
 
   @Test
   public void revokeAuthorizeTruncate() {
-    assumeTrue(backend.isDse(), "Test disabled when not running on DSE");
-    assertThat(removedMsgs("REVOKE AUTHORIZE FOR SELECT, TRUNCATE on table3 FROM 'auth_user1'"))
-        .containsExactly(
-            "cassandra, ALLOW, AUTHORITY, [SELECT, TRUNCATE], AuthorizedResource{kind=TABLE, keyspace=auth_keyspace2, element=table3}, auth_user1");
+    assumeTrue(false, "Test disabled - DSE only feature");
   }
 
   @Test

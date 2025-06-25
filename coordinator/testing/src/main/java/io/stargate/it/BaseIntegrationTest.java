@@ -48,10 +48,9 @@ public class BaseIntegrationTest {
   }
 
   // TODO generalize this to an ExecutionCondition that reads custom annotations, like
-  // @CassandraRequirement/@DseRequirement in the Java driver tests
+  // @CassandraRequirement in the Java driver tests
   public boolean isCassandra4() {
-    return !backend.isDse()
-        && Version.parse(backend.clusterVersion()).nextStable().compareTo(Version.V4_0_0) >= 0;
+    return Version.parse(backend.clusterVersion()).nextStable().compareTo(Version.V4_0_0) >= 0;
   }
 
   public boolean backendSupportsSAI() {

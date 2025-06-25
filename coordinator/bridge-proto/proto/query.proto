@@ -96,6 +96,11 @@ message Duration {
   sint64 nanos = 3;
 }
 
+// A vector value containing floating-point elements.
+message Vector {
+  repeated float values = 1;
+}
+
 // A CQL value. This is used both in requests to bind parameterized query strings, and in responses
 // to represent the result data.
 message Value {
@@ -160,6 +165,9 @@ message Value {
 
     // CQL types: decimal
     Decimal decimal = 16;
+
+    // CQL types: vector
+    Vector vector = 18;
   }
 }
 
@@ -277,6 +285,7 @@ message TypeSpec {
     LINESTRING = 0x16;
     POINT = 0x17;
     POLYGON = 0x18;
+    VECTOR = 0x19;
   }
 
   message Map {
@@ -318,6 +327,15 @@ message TypeSpec {
     repeated TypeSpec elements = 1;
   }
 
+  // A CQL vector: a fixed-size array of floating-point values.
+  message Vector {
+    // The element type (should be FLOAT for Cassandra 5.0)
+    TypeSpec element = 1;
+    
+    // The dimension/size of the vector
+    int32 size = 2;
+  }
+
   oneof spec {
     Basic basic = 1;
     Map map = 2;
@@ -325,6 +343,7 @@ message TypeSpec {
     Set set = 4;
     Udt udt = 5;
     Tuple tuple = 6;
+    Vector vector = 7;
   };
 }
 

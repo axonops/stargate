@@ -46,6 +46,11 @@ public interface DocumentTableProperties {
   String booleanValueColumnName();
 
   /**
+   * @return The name of the column where a vector value is stored.
+   */
+  String vectorValueColumnName();
+
+  /**
    * @return The prefix of the column where JSON path part is saved.
    */
   String pathColumnPrefix();

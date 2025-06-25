@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <!-- Parent -->
+  <parent>
+    <groupId>io.stargate</groupId>
+    <artifactId>stargate</artifactId>
+    <version>3.0.0-SNAPSHOT</version>
+  </parent>
+  <!-- Artifact properties -->
+  <groupId>io.stargate.db.cassandra</groupId>
+  <artifactId>persistence-cassandra-5.0</artifactId>
+  <name>Stargate - Coordinator - Persistence C* 5.0 (Non-OSGi)</name>
+  <properties>
+    <!-- If you update this, make sure to keep `cassandra.bundled-driver.version` in sync -->
+    <!-- Using 5.0.4 as the initial version, update as needed -->
+    <cassandra.version>5.0.4</cassandra.version>
+    <!--
+      The driver used internally by cassandra-all for UDFs (must match the version declared in
+      cassandra-all's POM).
+    -->
+    <!-- TODO: Check the actual bundled driver version for Cassandra 5.0 -->
+    <cassandra.bundled-driver.version>3.11.5</cassandra.bundled-driver.version>
+    <!-- Override Java version for Cassandra 5.0 compatibility -->
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <maven.compiler.release>17</maven.compiler.release>
+  </properties>
+  <dependencyManagement>
+    <dependencies>
+      <!-- 29-Mar-2022, tatu: Need to force Netty overrides here
+        -->
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-bom</artifactId>
+        <version>${netty.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <!-- Stargate component dependencies -->
+    <dependency>
+      <groupId>io.stargate.db</groupId>
+      <artifactId>persistence-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.stargate.db</groupId>
+      <artifactId>persistence-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.stargate.core</groupId>
+      <artifactId>core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.stargate.auth</groupId>
+      <artifactId>authnz</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- Cassandra/DataStax -->
+    <dependency>
+      <groupId>org.apache.cassandra</groupId>
+      <artifactId>cassandra-all</artifactId>
+      <version>${cassandra.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.gridkit.jvmtool</groupId>
+          <artifactId>sjk-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!--
+      Redeclare the driver dependency because it's optional in cassandra-all (this is required to
+      correctly handle UDFs).
+    -->
+    <dependency>
+      <groupId>com.datastax.cassandra</groupId>
+      <artifactId>cassandra-driver-core</artifactId>
+      <version>${cassandra.bundled-driver.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.datastax.oss</groupId>
+      <artifactId>java-driver-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.datastax.oss</groupId>
+      <artifactId>java-driver-shaded-guava</artifactId>
+    </dependency>
+    <!-- 3rd party dependencies -->
+    <dependency>
+      <groupId>org.immutables</groupId>
+      <artifactId>value</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>io.stargate.db</groupId>
+      <artifactId>persistence-test</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-inline</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-exec</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <!-- Standard jar plugin instead of bundle plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+      <!-- Shade plugin to include all dependencies -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.2.4</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <artifactSet>
+                <includes>
+                  <include>io.stargate.db:persistence-common</include>
+                  <include>org.apache.cassandra:cassandra-all</include>
+                  <include>com.datastax.cassandra:cassandra-driver-core</include>
+                </includes>
+              </artifactSet>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Enforcer plugin configuration -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.0.0-M3</version>
+        <executions>
+          <execution>
+            <id>enforce-java</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>[17,)</version>
+                </requireJavaVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Compiler plugin configuration -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>17</source>
+          <target>17</target>
+          <release>17</release>
+          <compilerArgs>
+            <arg>--add-exports</arg>
+            <arg>java.base/sun.nio.ch=ALL-UNNAMED</arg>
+            <arg>--add-exports</arg>
+            <arg>java.base/java.lang.ref=ALL-UNNAMED</arg>
+            <arg>--add-exports</arg>
+            <arg>java.base/sun.security.x509=ALL-UNNAMED</arg>
+            <arg>--add-opens</arg>
+            <arg>java.base/java.nio=ALL-UNNAMED</arg>
+            <arg>--add-opens</arg>
+            <arg>java.base/java.lang=ALL-UNNAMED</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

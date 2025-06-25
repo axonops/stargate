@@ -220,6 +220,18 @@ public enum CqlScalar {
                   + "A time can also be input as a numeric literal, which will be interpreted "
                   + "as a number of nanoseconds since midnight.")
           .build()),
+  VECTOR(
+      Column.Type.Vector,
+      float[].class,
+      GraphQLScalarType.newScalar()
+          .name("Vector")
+          .coercing(VectorCoercing.INSTANCE)
+          .description(
+              "Represents a CQL `vector` as an array of floating-point numbers.\n"
+                  + "This is used for similarity search and machine learning applications.\n"
+                  + "Example: [0.1, 0.2, 0.3, 0.4]\n"
+                  + "The vector dimension is fixed per column and defined in the schema.")
+          .build()),
   ;
 
   private static final Map<Column.Type, CqlScalar> FROM_CQL =

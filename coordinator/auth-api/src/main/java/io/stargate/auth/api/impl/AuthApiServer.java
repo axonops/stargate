@@ -21,7 +21,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.util.JarLocation;
 import io.stargate.auth.AuthenticationService;
-import io.stargate.auth.api.AuthApiActivator;
+import io.stargate.auth.api.AuthApiModule;
 import io.stargate.auth.api.resources.AuthResource;
 import io.stargate.auth.api.swagger.SwaggerUIResource;
 import io.stargate.core.metrics.api.HttpMetricsTagProvider;
@@ -39,8 +39,6 @@ import javax.servlet.FilterRegistration;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ServerProperties;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
 
 public class AuthApiServer extends Application<AuthApiServerConfiguration> {
 
@@ -97,20 +95,10 @@ public class AuthApiServer extends Application<AuthApiServerConfiguration> {
     environment.jersey().register(SwaggerSerializers.class);
     environment.jersey().register(SwaggerUIResource.class);
 
-    environment
-        .jersey()
-        .register(
-            new AbstractBinder() {
-              @Override
-              protected void configure() {
-                bind(FrameworkUtil.getBundle(AuthApiActivator.class)).to(Bundle.class);
-              }
-            });
-
     enableCors(environment);
 
     MetricsBinder metricsBinder =
-        new MetricsBinder(metrics, httpMetricsTagProvider, AuthApiActivator.MODULE_NAME);
+        new MetricsBinder(metrics, httpMetricsTagProvider, AuthApiModule.MODULE_NAME);
     metricsBinder.register(environment.jersey());
 
     // no html content
@@ -121,8 +109,8 @@ public class AuthApiServer extends Application<AuthApiServerConfiguration> {
   public void initialize(final Bootstrap<AuthApiServerConfiguration> bootstrap) {
     super.initialize(bootstrap);
     bootstrap.setConfigurationSourceProvider(
-        new StargateV1ConfigurationSourceProvider(AuthApiActivator.MODULE_NAME));
-    bootstrap.setMetricRegistry(metrics.getRegistry(AuthApiActivator.MODULE_NAME));
+        new StargateV1ConfigurationSourceProvider(AuthApiModule.MODULE_NAME));
+    bootstrap.setMetricRegistry(metrics.getRegistry(AuthApiModule.MODULE_NAME));
   }
 
   private void enableCors(Environment environment) {

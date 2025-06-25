@@ -5,7 +5,7 @@
   <groupId>io.stargate</groupId>
   <artifactId>stargate</artifactId>
   <name>Stargate - Coordinator Parent pom</name>
-  <version>2.0.34-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <!-- Description -->
   <description>Stargate - An open source data API gateway</description>
@@ -43,13 +43,12 @@
   <!-- Shared properties -->
   <properties>
     <!-- Compiler -->
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <maven.compiler.release>17</maven.compiler.release>
     <!-- Encoding -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <!-- OSGi -->
-    <osgi.bundle.version>${project.version}</osgi.bundle.version>
     <!-- Release -->
     <project.scm.id>github</project.scm.id>
     <doclint>none</doclint>
@@ -85,7 +84,7 @@
     <snakeyaml.version>1.33</snakeyaml.version>
     <swagger-ui.version>3.52.5</swagger-ui.version>
     <swagger-jersey2-jaxrs.version>1.6.3</swagger-jersey2-jaxrs.version>
-    <!-- Netty version used by Cassandra 3.11/4.0 (DSE uses different version)
+    <!-- Netty version used by Cassandra 5.0
 	 NOTE: upgrading version often breaks persistence backend so make sure
 	 you know what you are doing if/when upgrading
       -->
@@ -98,13 +97,6 @@
     <awaitility.version>4.1.1</awaitility.version>
   </properties>
   <dependencies>
-    <!-- Basic OSGi dependency, provided by container -->
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.core</artifactId>
-      <version>6.0.0</version>
-      <scope>provided</scope>
-    </dependency>
     <!-- Shared test dependencies -->
     <dependency>
       <groupId>org.jacoco</groupId>
@@ -182,42 +174,6 @@
       </build>
     </profile>
     <profile>
-      <id>dse</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <modules>
-        <module>core</module>
-        <module>stargate-starter</module>
-        <module>persistence-api</module>
-        <module>persistence-common</module>
-        <module>persistence-test</module>
-        <module>persistence-cassandra-3.11</module>
-        <module>persistence-cassandra-4.0</module>
-        <module>persistence-dse-6.8</module>
-        <module>bridge</module>
-        <module>cql</module>
-        <module>graphqlapi</module>
-        <module>restapi</module>
-        <module>auth-api</module>
-        <module>authnz</module>
-        <module>auth-table-based-service</module>
-        <module>auth-jwt-service</module>
-        <module>health-checker</module>
-        <module>config-store-api</module>
-        <module>config-store-yaml</module>
-        <module>rate-limiting-global</module>
-        <module>grpc-proto</module>
-        <module>bridge-proto</module>
-        <module>grpc</module>
-        <module>metrics-jersey</module>
-        <module>grpc-examples</module>
-        <!-- testing last -->
-        <module>testing-services</module>
-        <module>testing</module>
-      </modules>
-    </profile>
-    <profile>
       <id>default</id>
       <activation>
         <activeByDefault>true</activeByDefault>
@@ -228,8 +184,7 @@
         <module>persistence-api</module>
         <module>persistence-common</module>
         <module>persistence-test</module>
-        <module>persistence-cassandra-3.11</module>
-        <module>persistence-cassandra-4.0</module>
+        <module>persistence-cassandra-5.0</module>
         <module>bridge</module>
         <module>cql</module>
         <module>graphqlapi</module>
@@ -425,8 +380,8 @@
             <configuration>
               <rules>
                 <requireJavaVersion>
-                  <version>[1.8,1.9)</version>
-                  <message>Project requires JDK 8</message>
+                  <version>[1.8,)</version>
+                  <message>Project requires JDK 8 or higher</message>
                 </requireJavaVersion>
                 <requireUpperBoundDeps>
                   <!-- If specifying includes ONLY those are checked
@@ -465,21 +420,6 @@
             <showWarnings>true</showWarnings>
             <failOnWarning>false</failOnWarning>
           </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>maven-bundle-plugin</artifactId>
-          <extensions>true</extensions>
-          <version>5.1.9</version>
-          <executions>
-            <execution>
-              <id>bundle-manifest</id>
-              <phase>process-classes</phase>
-              <goals>
-                <goal>manifest</goal>
-              </goals>
-            </execution>
-          </executions>
         </plugin>
         <plugin>
           <artifactId>maven-source-plugin</artifactId>

@@ -23,6 +23,7 @@ import io.stargate.bridge.proto.QueryOuterClass.Unavailable;
 import io.stargate.bridge.proto.QueryOuterClass.WriteFailure;
 import io.stargate.bridge.proto.QueryOuterClass.WriteTimeout;
 import io.stargate.bridge.proto.StargateBridgeGrpc.StargateBridgeBlockingStub;
+import io.stargate.core.config.ConfigurationLoader;
 import io.stargate.db.Parameters;
 import io.stargate.db.Result;
 import io.stargate.db.Statement;
@@ -63,6 +64,30 @@ import org.junit.jupiter.params.provider.MethodSource;
 public class PersistenceExceptionTest extends BaseBridgeServiceTest {
 
   private static final MD5Digest UNPREPARED_ID = MD5Digest.compute(new byte[] {0});
+
+  // Load test host configuration
+  private static final String TEST_HOST_PRIMARY;
+  private static final String TEST_HOST_SECONDARY;
+
+  static {
+    String primary =
+        System.getProperty(
+            "test.cassandra.host.primary",
+            ConfigurationLoader.getProperty("test.cassandra.host.primary"));
+    String secondary =
+        System.getProperty(
+            "test.cassandra.host.secondary",
+            ConfigurationLoader.getProperty("test.cassandra.host.secondary"));
+
+    if (primary == null || secondary == null) {
+      throw new IllegalStateException(
+          "Test hosts not configured! Please set test.cassandra.host.primary and "
+              + "test.cassandra.host.secondary in stargate-config.properties or as system properties");
+    }
+
+    TEST_HOST_PRIMARY = primary;
+    TEST_HOST_SECONDARY = secondary;
+  }
 
   @Test
   public void unavailable() {
@@ -141,9 +166,9 @@ public class PersistenceExceptionTest extends BaseBridgeServiceTest {
                         2,
                         false,
                         ImmutableMap.of(
-                            InetAddressAndPort.getByName("127.0.0.1"),
+                            InetAddressAndPort.getByName(TEST_HOST_PRIMARY),
                             RequestFailureReason.TIMEOUT,
-                            InetAddressAndPort.getByName("127.0.0.2"),
+                            InetAddressAndPort.getByName(TEST_HOST_SECONDARY),
                             RequestFailureReason.INCOMPATIBLE_SCHEMA))))
         .isInstanceOf(StatusRuntimeException.class)
         .satisfies(
@@ -198,9 +223,9 @@ public class PersistenceExceptionTest extends BaseBridgeServiceTest {
                         3,
                         WriteType.SIMPLE,
                         ImmutableMap.of(
-                            InetAddressAndPort.getByName("127.0.0.1"),
+                            InetAddressAndPort.getByName(TEST_HOST_PRIMARY),
                             RequestFailureReason.TIMEOUT,
-                            InetAddressAndPort.getByName("127.0.0.2"),
+                            InetAddressAndPort.getByName(TEST_HOST_SECONDARY),
                             RequestFailureReason.INCOMPATIBLE_SCHEMA))))
         .isInstanceOf(StatusRuntimeException.class)
         .satisfies(

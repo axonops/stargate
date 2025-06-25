@@ -5,7 +5,7 @@
   <parent>
     <artifactId>stargate</artifactId>
     <groupId>io.stargate</groupId>
-    <version>2.0.34-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
   </parent>
   <!-- Artifact props -->
   <groupId>io.stargate.config.store.yaml</groupId>
@@ -59,37 +59,9 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <configuration>
-          <unpackBundle>true</unpackBundle>
-          <instructions>
-            <Bundle-Name>Config-Store-Yaml</Bundle-Name>
-            <Bundle-Description>Config store YAML implementation</Bundle-Description>
-            <Bundle-SymbolicName>io.stargate.config.store.yaml</Bundle-SymbolicName>
-            <Bundle-Activator>io.stargate.config.store.yaml.ConfigStoreActivator</Bundle-Activator>
-            <Import-Package><![CDATA[
-                                        org.slf4j,
-                                        org.slf4j.helpers,
-                                        org.slf4j.spi,
-                                        org.osgi.framework,
-                                        io.stargate.config.store.api,
-                                        io.stargate.core.*,
-                                        com.codahale.metrics,
-                                        !com.codahale.metrics.graphite.*,
-                                        ]]></Import-Package>
-            <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
-            <Embed-Transitive>true</Embed-Transitive>
-          </instructions>
-        </configuration>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
-          <archive>
-            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-          </archive>
           <outputDirectory>${project.basedir}/../stargate-lib</outputDirectory>
         </configuration>
       </plugin>

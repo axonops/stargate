@@ -2,7 +2,7 @@
 # Dockerfile for building coordinator node images
 #
 
-FROM adoptopenjdk/openjdk8:jre8u352-b08 as base
+FROM eclipse-temurin:17-jre as base
 
 RUN apt update -qq \
     && apt install iproute2 libaio1 libjemalloc2 -y \
@@ -37,11 +37,5 @@ COPY ${LIBDIR} stargate-lib/
 COPY ./starctl ./starctl
 ENTRYPOINT ["./starctl"]
 
-FROM base as coordinator-4_0
-COPY stargate-lib/persistence-api*.jar stargate-lib/persistence-cassandra-4.0*.jar stargate-lib/
-
-FROM base as coordinator-3_11
-COPY stargate-lib/persistence-api*.jar stargate-lib/persistence-cassandra-3.11*.jar stargate-lib/
-
-FROM base as coordinator-dse-68
-COPY stargate-lib/persistence-api*.jar stargate-lib/persistence-dse*.jar stargate-lib/
+FROM base as coordinator-5_0
+COPY stargate-lib/persistence-api*.jar stargate-lib/persistence-cassandra-5.0*.jar stargate-lib/

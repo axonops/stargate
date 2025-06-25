@@ -67,6 +67,15 @@ public interface DocumentConfig {
   @WithDefault("1000")
   int maxSearchPageSize();
 
+  /**
+   * @return Defines the dimension for vector columns, defaults to <code>1536</code>. This is the
+   *     size commonly used for OpenAI embeddings.
+   */
+  @Max(8192)
+  @Positive
+  @WithDefault("1536")
+  int vectorDimension();
+
   /** {@inheritDoc} */
   DocumentTableConfig table();
 
@@ -106,6 +115,13 @@ public interface DocumentConfig {
     @NotBlank
     @WithDefault(Constants.BOOLEAN_VALUE_COLUMN_NAME)
     String booleanValueColumnName();
+
+    /**
+     * @return The name of the column where a vector value is stored.
+     */
+    @NotBlank
+    @WithDefault(Constants.VECTOR_VALUE_COLUMN_NAME)
+    String vectorValueColumnName();
 
     /**
      * @return The prefix of the column where JSON path part is saved.

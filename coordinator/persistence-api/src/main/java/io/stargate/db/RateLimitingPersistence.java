@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
  * the underlying persistence.
  */
 public class RateLimitingPersistence implements Persistence {
-  private static final Logger logger = LoggerFactory.getLogger(DbActivator.class);
+  private static final Logger logger = LoggerFactory.getLogger(RateLimitingPersistence.class);
 
   private final Persistence persistence;
   private final RateLimitingManager manager;

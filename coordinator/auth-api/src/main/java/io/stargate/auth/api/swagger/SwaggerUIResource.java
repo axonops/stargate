@@ -24,7 +24,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
-import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,13 +37,16 @@ public class SwaggerUIResource {
   private static final Pattern fileExtensionPattern =
       Pattern.compile("([^\\s]+(\\.(?i)(css|png|js|map|html))$)");
 
-  private final Bundle bundle;
+  private final ClassLoader classLoader;
   private final String indexFile;
 
   @Inject
-  public SwaggerUIResource(Bundle bundle) throws IOException {
-    this.bundle = bundle;
-    URL entry = bundle.getEntry("/swagger-ui-cust/index.html");
+  public SwaggerUIResource() throws IOException {
+    this.classLoader = this.getClass().getClassLoader();
+    URL entry = classLoader.getResource("swagger-ui-cust/index.html");
+    if (entry == null) {
+      throw new IOException("Could not find swagger-ui-cust/index.html in classpath");
+    }
 
     // Save the templated file away for later so that we only have to do this conversion once.
     indexFile =
@@ -109,7 +111,10 @@ public class SwaggerUIResource {
     InputStream is;
     String type = MediaType.TEXT_HTML;
     try {
-      URL entry = bundle.getEntry("/swagger-ui/" + fileName);
+      URL entry = classLoader.getResource("swagger-ui/" + fileName);
+      if (entry == null) {
+        throw new FileNotFoundException("Resource not found: swagger-ui/" + fileName);
+      }
       is = entry.openConnection().getInputStream();
 
       if (fileName.endsWith(".css")) {

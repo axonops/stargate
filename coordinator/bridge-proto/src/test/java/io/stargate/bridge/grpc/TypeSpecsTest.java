@@ -104,6 +104,9 @@ public class TypeSpecsTest {
       arguments(
           TypeSpecs.tuple(TypeSpecs.INT, TypeSpecs.VARCHAR, TypeSpecs.FLOAT),
           "tuple<int,text,float>"),
+      arguments(TypeSpecs.vector(TypeSpecs.FLOAT, 3), "vector<float, 3>"),
+      arguments(TypeSpecs.vector(TypeSpecs.FLOAT, 128), "vector<float, 128>"),
+      arguments(TypeSpecs.vector(TypeSpecs.FLOAT, 1536), "vector<float, 1536>"),
     };
   }
 
@@ -125,5 +128,53 @@ public class TypeSpecsTest {
           TypeSpecs.tuple(TypeSpecs.INT, TypeSpecs.VARCHAR),
           TypeSpecs.tuple(TypeSpecs.INT, TypeSpecs.VARCHAR)),
     };
+  }
+
+  @Test
+  public void shouldParseVectorTypes() {
+    TypeSpec vector3 = TypeSpecs.parse("vector<float, 3>", Collections.emptyList(), false);
+    assertThat(vector3.hasVector()).isTrue();
+    assertThat(vector3.getVector().getElement()).isEqualTo(TypeSpecs.FLOAT);
+    assertThat(vector3.getVector().getSize()).isEqualTo(3);
+
+    TypeSpec vector128 = TypeSpecs.parse("vector<float, 128>", Collections.emptyList(), false);
+    assertThat(vector128.hasVector()).isTrue();
+    assertThat(vector128.getVector().getElement()).isEqualTo(TypeSpecs.FLOAT);
+    assertThat(vector128.getVector().getSize()).isEqualTo(128);
+  }
+
+  @Test
+  public void shouldThrowOnInvalidVectorSize() {
+    assertThatThrownBy(() -> TypeSpecs.parse("vector<float, 0>", Collections.emptyList(), false))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Vector size must be positive");
+
+    assertThatThrownBy(() -> TypeSpecs.parse("vector<float, -5>", Collections.emptyList(), false))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Vector size must be positive");
+
+    assertThatThrownBy(() -> TypeSpecs.parse("vector<float, abc>", Collections.emptyList(), false))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Malformed type name: vector size must be an integer, got 'abc'");
+  }
+
+  @Test
+  public void shouldThrowOnInvalidVectorParameters() {
+    assertThatThrownBy(() -> TypeSpecs.parse("vector<float>", Collections.emptyList(), false))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Malformed type name: vector requires two parameters");
+
+    assertThatThrownBy(() -> TypeSpecs.parse("vector<float, 3, 4>", Collections.emptyList(), false))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Malformed type name: vector size must be an integer, got '3, 4'");
+  }
+
+  @Test
+  public void shouldHandleVectorFreezability() {
+    TypeSpec vector = TypeSpecs.vector(TypeSpecs.FLOAT, 3);
+    // Vectors are never frozen
+    assertThat(TypeSpecs.isFrozen(vector)).isFalse();
+    assertThat(TypeSpecs.freeze(vector)).isEqualTo(vector);
+    assertThat(TypeSpecs.unfreeze(vector)).isEqualTo(vector);
   }
 }

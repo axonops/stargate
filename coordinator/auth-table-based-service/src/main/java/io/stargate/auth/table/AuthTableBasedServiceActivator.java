@@ -17,53 +17,70 @@ package io.stargate.auth.table;
 
 import io.stargate.auth.AuthenticationService;
 import io.stargate.auth.AuthorizationService;
-import io.stargate.core.activator.BaseActivator;
+import io.stargate.core.services.BaseService;
+import io.stargate.core.services.ServiceDependency;
 import io.stargate.db.datastore.DataStoreFactory;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
-import net.jcip.annotations.GuardedBy;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class AuthTableBasedServiceActivator extends BaseActivator {
-  @SuppressWarnings("JdkObsolete")
-  static Hashtable<String, String> props = new Hashtable<>();
+public class AuthTableBasedServiceActivator extends BaseService {
+  private static final Logger logger =
+      LoggerFactory.getLogger(AuthTableBasedServiceActivator.class);
 
-  private final ServicePointer<DataStoreFactory> dataStoreFactory =
-      ServicePointer.create(DataStoreFactory.class);
   public static final String AUTH_TABLE_IDENTIFIER = "AuthTableBasedService";
+
+  private static final Map<String, Object> props = new HashMap<>();
 
   static {
     props.put("AuthIdentifier", AUTH_TABLE_IDENTIFIER);
   }
 
+  private AuthnTableBasedService authnTableBasedService;
+  private AuthzTableBasedService authzTableBasedService;
+
   public AuthTableBasedServiceActivator() {
-    super("authnTableBasedService and authzTableBasedServie");
+    super("authnTableBasedService and authzTableBasedService");
   }
 
-  @GuardedBy("this")
-  private final AuthnTableBasedService authnTableBasedService = new AuthnTableBasedService();
-
-  @GuardedBy("this")
-  private final AuthzTableBasedService authzTableBasedService = new AuthzTableBasedService();
+  @Override
+  protected List<ServiceDependency<?>> dependencies() {
+    return Collections.singletonList(ServiceDependency.required(DataStoreFactory.class));
+  }
 
   @Override
-  // The parent class calls createServices() from a synchronized method
-  @SuppressWarnings("GuardedBy")
-  protected List<ServiceAndProperties> createServices() {
-    if (AUTH_TABLE_IDENTIFIER.equals(
-        System.getProperty("stargate.auth_id", AUTH_TABLE_IDENTIFIER))) {
-      authnTableBasedService.setDataStoreFactory(dataStoreFactory.get());
+  protected void createServices() throws Exception {
+    String authId = System.getProperty("stargate.auth_id", AUTH_TABLE_IDENTIFIER);
 
-      return Arrays.asList(
-          new ServiceAndProperties(authnTableBasedService, AuthenticationService.class, props),
-          new ServiceAndProperties(authzTableBasedService, AuthorizationService.class, props));
+    if (!AUTH_TABLE_IDENTIFIER.equals(authId)) {
+      logger.info("AuthTableBasedService not enabled. Current auth_id: {}", authId);
+      return;
     }
-    return Collections.emptyList();
+
+    logger.info("Starting AuthTableBasedService");
+
+    // Get required dependencies
+    DataStoreFactory dataStoreFactory = getService(DataStoreFactory.class);
+
+    // Create and configure services
+    authnTableBasedService = new AuthnTableBasedService();
+    authnTableBasedService.setDataStoreFactory(dataStoreFactory);
+
+    authzTableBasedService = new AuthzTableBasedService();
+
+    // Register services
+    register(AuthenticationService.class, authnTableBasedService, props);
+    register(AuthorizationService.class, authzTableBasedService, props);
+
+    logger.info("AuthTableBasedService registered successfully");
   }
 
   @Override
-  protected List<ServicePointer<?>> dependencies() {
-    return Collections.singletonList(dataStoreFactory);
+  protected void stopServices() throws Exception {
+    logger.info("Stopping AuthTableBasedService");
+    // Services will be automatically unregistered by BaseService
   }
 }

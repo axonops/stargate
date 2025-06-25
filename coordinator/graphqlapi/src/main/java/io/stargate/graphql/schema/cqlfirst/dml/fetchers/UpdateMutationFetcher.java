@@ -37,12 +37,15 @@ public class UpdateMutationFetcher extends MutationFetcher {
             && environment.getArgument("ifExists") != null
             && (Boolean) environment.getArgument("ifExists");
 
+    Integer ttl = getTTL(environment);
+    var queryBuilder = context.getDataStore().queryBuilder().update(table.keyspace(), table.name());
+
+    if (ttl != null) {
+      queryBuilder = queryBuilder.ttl(ttl);
+    }
+
     BoundQuery query =
-        context
-            .getDataStore()
-            .queryBuilder()
-            .update(table.keyspace(), table.name())
-            .ttl(getTTL(environment))
+        queryBuilder
             .value(buildAssignments(table, environment))
             .where(buildPkCKWhere(table, environment))
             .ifs(buildConditions(table, environment.getArgument("ifCondition")))

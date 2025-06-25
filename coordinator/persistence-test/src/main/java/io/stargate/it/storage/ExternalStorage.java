@@ -68,7 +68,7 @@ public class ExternalStorage extends ExternalResource<ClusterSpec, ExternalStora
       System.getProperty("stargate.test.backend.cluster.impl.class", CcmCluster.class.getName());
 
   static {
-    String version = System.getProperty(CCM_VERSION, "3.11.19");
+    String version = System.getProperty(CCM_VERSION, "5.0");
     System.setProperty(CCM_VERSION, version);
   }
 
@@ -202,14 +202,11 @@ public class ExternalStorage extends ExternalResource<ClusterSpec, ExternalStora
     private final AtomicBoolean removed = new AtomicBoolean();
 
     public CcmCluster(ClusterSpec spec, ExtensionContext context) {
-      this(spec, Collections.emptyMap(), Collections.emptyMap(), context);
+      this(spec, Collections.emptyMap(), context);
     }
 
     public CcmCluster(
-        ClusterSpec spec,
-        Map<String, Object> cassandraConfig,
-        Map<String, Object> dseConfig,
-        ExtensionContext context) {
+        ClusterSpec spec, Map<String, Object> cassandraConfig, ExtensionContext context) {
       super(spec);
       this.initSite = context.getUniqueId();
       int numNodes = spec.nodes();
@@ -219,19 +216,8 @@ public class ExternalStorage extends ExternalResource<ClusterSpec, ExternalStora
               .withCassandraConfiguration("cluster_name", CLUSTER_NAME)
               .withNodes(numNodes);
 
-      // if DSE override metadata dir, not working on GH actions
-      if (CcmBridge.DSE_ENABLEMENT) {
-        builder =
-            builder.withCassandraConfiguration(
-                "metadata_directory", "$HOME/.stargate-test/cassandra/metadata");
-      }
-
       for (Entry<String, Object> e : cassandraConfig.entrySet()) {
         builder = builder.withCassandraConfiguration(e.getKey(), e.getValue());
-      }
-
-      for (Entry<String, Object> e : dseConfig.entrySet()) {
-        builder = builder.withDseConfiguration(e.getKey(), e.getValue());
       }
 
       this.ccm = builder.build();
@@ -329,7 +315,7 @@ public class ExternalStorage extends ExternalResource<ClusterSpec, ExternalStora
 
     @Override
     public String infoForTestLog() {
-      return "" + (isDse() ? "DSE " : "Cassandra ") + clusterVersion();
+      return "Cassandra " + clusterVersion();
     }
 
     private void dumpLogs() {
@@ -409,13 +395,8 @@ public class ExternalStorage extends ExternalResource<ClusterSpec, ExternalStora
 
     @Override
     public String clusterVersion() {
-      Version version = ccm.getDseVersion().orElse(ccm.getCassandraVersion());
+      Version version = ccm.getCassandraVersion();
       return String.format("%d.%d", version.getMajor(), version.getMinor());
-    }
-
-    @Override
-    public boolean isDse() {
-      return ccm.getDseVersion().isPresent();
     }
 
     @Override
@@ -446,36 +427,18 @@ public class ExternalStorage extends ExternalResource<ClusterSpec, ExternalStora
       File clusterDir = new File(configDir.toFile(), "ccm_1");
       nodeDir = new File(clusterDir, "node" + (1 + nodeIndex));
 
-      if (cluster.isDse()) {
-        cassandraConf = new File(nodeDir, "resources/cassandra/conf");
-      } else {
-        cassandraConf = new File(nodeDir, "conf");
-      }
+      cassandraConf = new File(nodeDir, "conf");
 
       logDir = new File(nodeDir, "logs");
       binDir = new File(nodeDir, "bin");
-      File startScript;
-      if (cluster.isDse()) {
-        readMessage = "DSE startup complete";
-        startScript = new File(binDir, "dse");
-      } else {
-        readMessage = "Starting listening for CQL clients";
-        startScript = new File(binDir, "cassandra");
-      }
+      readMessage = "Starting listening for CQL clients";
+      File startScript = new File(binDir, "cassandra");
 
       cmd = new CommandLine(startScript.getAbsolutePath());
-
-      if (cluster.isDse()) {
-        cmd.addArgument("cassandra");
-      }
 
       cmd.addArgument("-f"); // run in the foreground
       cmd.addArgument("-Dcassandra.logdir=" + logDir.getAbsolutePath());
       cmd.addArgument("-Dcassandra.boot_without_jna=true");
-
-      if (cluster.isDse()) {
-        cmd.addArgument("-Dcassandra.migration_task_wait_in_seconds=4");
-      }
 
       addStdOutListener(
           (node, line) -> {
@@ -490,16 +453,8 @@ public class ExternalStorage extends ExternalResource<ClusterSpec, ExternalStora
       env.put("CASSANDRA_CONF", cassandraConf.getAbsolutePath());
       env.put("CASSANDRA_LOG_DIR", logDir.getAbsolutePath());
 
-      if (cluster.isDse()) {
-        env.put("DSE_HOME", cluster.installDir().getAbsolutePath());
-        env.put("CASSANDRA_HOME", cluster.installDir().getAbsolutePath() + "/resources/cassandra");
-        env.put("TOMCAT_HOME", new File(nodeDir, "resources/tomcat").getAbsolutePath());
-        env.put("DSE_LOG_ROOT", logDir.getAbsolutePath() + "/dse");
-        env.put("DSE_CONF", new File(nodeDir, "resources/dse/conf").getAbsolutePath());
-      } else {
-        env.put("CASSANDRA_HOME", cluster.installDir().getAbsolutePath());
-        env.put("CASSANDRA_INCLUDE", new File(binDir, "cassandra.in.sh").getAbsolutePath());
-      }
+      env.put("CASSANDRA_HOME", cluster.installDir().getAbsolutePath());
+      env.put("CASSANDRA_INCLUDE", new File(binDir, "cassandra.in.sh").getAbsolutePath());
 
       start(cmd, env.build());
     }

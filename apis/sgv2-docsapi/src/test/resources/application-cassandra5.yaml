@@ -1,0 +1,46 @@
+# Configuration for testing against Cassandra 5.0 instance
+# This profile is used when running integration tests against an external Cassandra 5.0 instance
+
+stargate:
+  # Disable bridge ignoring for external testing
+  data-store:
+    ignore-bridge: false
+    
+  # Documents API specific settings for Cassandra 5.0
+  documents:
+    # Enable vector support for Cassandra 5.0
+    vector:
+      enabled: true
+      dimension: 1536
+      similarity-function: cosine
+
+# Quarkus settings
+quarkus:
+  # gRPC client configuration for bridge
+  grpc:
+    clients:
+      bridge:
+        # These will be overridden by the test resource
+        host: localhost
+        port: 8091
+        
+  # HTTP client settings
+  http:
+    test-port: 8180
+    test-timeout: 30s
+    
+  # Test profile specific settings
+  test:
+    continuous-testing: false
+    native-image-profile: false
+
+# Logging configuration for debugging
+quarkus:
+  log:
+    category:
+      "io.stargate.sgv2.docsapi":
+        level: DEBUG
+      "io.stargate.bridge":
+        level: DEBUG
+      "io.grpc":
+        level: INFO

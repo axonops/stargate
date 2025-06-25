@@ -39,6 +39,7 @@ public class FromProtoValueCodecs {
   private static final DurationCodec CODEC_DURATION = new DurationCodec();
   private static final InetCodec CODEC_INET = new InetCodec();
   private static final BlobCodec CODEC_BLOB = new BlobCodec();
+  private static final VectorCodec CODEC_VECTOR = new VectorCodec();
 
   public FromProtoValueCodec codecFor(
       QueryOuterClass.ColumnSpec columnSpec, RequestParams requestParams) {
@@ -63,6 +64,8 @@ public class FromProtoValueCodecs {
         return tupleCodecFor(columnSpec, type.getTuple(), requestParams);
       case UDT:
         return udtCodecFor(columnSpec, type.getUdt(), requestParams);
+      case VECTOR:
+        return vectorCodecFor(columnSpec, type.getVector(), requestParams);
 
         // Invalid cases:
       case SPEC_NOT_SET:
@@ -184,6 +187,14 @@ public class FromProtoValueCodecs {
       fieldCodecs.put(fieldName, codecFor(columnSpec, entry.getValue(), requestParams));
     }
     return new UDTCodec(udtSpec.getName(), fieldCodecs);
+  }
+
+  protected FromProtoValueCodec vectorCodecFor(
+      QueryOuterClass.ColumnSpec columnSpec,
+      QueryOuterClass.TypeSpec.Vector vectorSpec,
+      RequestParams requestParams) {
+    // For now, we only support float vectors as that's what Cassandra 5.0 supports
+    return CODEC_VECTOR;
   }
 
   /* Basic/scalar codec implementations: textual */
@@ -719,6 +730,28 @@ public class FromProtoValueCodecs {
       }
 
       return result;
+    }
+  }
+
+  protected static final class VectorCodec extends FromProtoValueCodec {
+    @Override
+    public Object fromProtoValue(QueryOuterClass.Value value) {
+      return (value.getInnerCase() == QueryOuterClass.Value.InnerCase.NULL)
+          ? null
+          : Values.vector(value);
+    }
+
+    @Override
+    public JsonNode jsonNodeFrom(QueryOuterClass.Value value) {
+      if (value.getInnerCase() == QueryOuterClass.Value.InnerCase.NULL) {
+        return jsonNodeFactory.nullNode();
+      }
+      List<Float> vectorValues = Values.vector(value);
+      ArrayNode arrayNode = jsonNodeFactory.arrayNode();
+      for (Float val : vectorValues) {
+        arrayNode.add(val);
+      }
+      return arrayNode;
     }
   }
 }

@@ -12,6 +12,8 @@ import com.datastax.oss.driver.shaded.guava.common.collect.ImmutableSet;
 import com.datastax.oss.protocol.internal.util.Bytes;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.stargate.db.query.Modification.Operation;
 import io.stargate.db.query.builder.Value;
 import io.stargate.db.query.builder.ValueModifier;
@@ -25,7 +27,6 @@ import io.stargate.db.schema.ImmutableUserDefinedType;
 import io.stargate.db.schema.ParameterizedType.TupleType;
 import io.stargate.db.schema.Table;
 import io.stargate.db.schema.UserDefinedType;
-import io.stargate.web.impl.RestApiServer;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -400,7 +401,8 @@ public class ConvertersTest {
 
   private static ObjectMapper testObjectMapper() {
     ObjectMapper mapper = new ObjectMapper();
-    RestApiServer.configureObjectMapper(mapper);
+    mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    mapper.registerModule(new JavaTimeModule());
     return mapper;
   }
 

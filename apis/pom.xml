@@ -5,7 +5,7 @@
   <groupId>io.stargate</groupId>
   <artifactId>sgv2-api-parent</artifactId>
   <name>Stargate - V2 API Parent pom</name>
-  <version>2.0.34-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <!-- Description -->
   <description>Stargate - An open source data API gateway</description>
@@ -68,16 +68,15 @@
     <skipUnitTests>${skipTests}</skipUnitTests>
     <surefire-plugin.version>3.3.0</surefire-plugin.version>
     <!--
-      Integration test properties, defaults to cassandra-40
+      Integration test properties, defaults to cassandra-50
       Please maintain default values for int-test in sync with io.stargate.sgv2.docsapi.testresource.StargateTestResource.Defaults
      -->
     <stargate.int-test.cassandra.image>cassandra</stargate.int-test.cassandra.image>
-    <stargate.int-test.cassandra.image-tag>4.0.17</stargate.int-test.cassandra.image-tag>
-    <stargate.int-test.coordinator.image>stargateio/coordinator-4_0</stargate.int-test.coordinator.image>
+    <stargate.int-test.cassandra.image-tag>5.0</stargate.int-test.cassandra.image-tag>
+    <stargate.int-test.coordinator.image>stargateio/coordinator-5_0</stargate.int-test.coordinator.image>
     <stargate.int-test.coordinator.image-tag>v${project.version}</stargate.int-test.coordinator.image-tag>
     <stargate.int-test.cluster.name>cass-${stargate.int-test.cassandra.image-tag}-cluster</stargate.int-test.cluster.name>
-    <stargate.int-test.cluster.version>4.0</stargate.int-test.cluster.version>
-    <stargate.int-test.cluster.dse>false</stargate.int-test.cluster.dse>
+    <stargate.int-test.cluster.version>5.0</stargate.int-test.cluster.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -242,33 +241,12 @@
     </plugins>
   </build>
   <profiles>
-    <!-- cassandra-40 used to be active by default, keeping for bw compatibility -->
+    <!-- cassandra-50 is the only supported profile -->
     <profile>
-      <id>cassandra-40</id>
-    </profile>
-    <profile>
-      <id>cassandra-311</id>
-      <properties>
-        <stargate.int-test.cassandra.image>cassandra</stargate.int-test.cassandra.image>
-        <stargate.int-test.cassandra.image-tag>3.11.14</stargate.int-test.cassandra.image-tag>
-        <stargate.int-test.coordinator.image>stargateio/coordinator-3_11</stargate.int-test.coordinator.image>
-        <stargate.int-test.coordinator.image-tag>v${project.version}</stargate.int-test.coordinator.image-tag>
-        <stargate.int-test.cluster.name>cass-${stargate.int-test.cassandra.image-tag}-cluster</stargate.int-test.cluster.name>
-        <stargate.int-test.cluster.version>3.11</stargate.int-test.cluster.version>
-        <stargate.int-test.cluster.dse>false</stargate.int-test.cluster.dse>
-      </properties>
-    </profile>
-    <profile>
-      <id>dse-68</id>
-      <properties>
-        <stargate.int-test.cassandra.image>datastax/dse-server</stargate.int-test.cassandra.image>
-        <stargate.int-test.cassandra.image-tag>6.8.55</stargate.int-test.cassandra.image-tag>
-        <stargate.int-test.coordinator.image>stargateio/coordinator-dse-68</stargate.int-test.coordinator.image>
-        <stargate.int-test.coordinator.image-tag>v${project.version}</stargate.int-test.coordinator.image-tag>
-        <stargate.int-test.cluster.name>dse-${stargate.int-test.cassandra.image-tag}-cluster</stargate.int-test.cluster.name>
-        <stargate.int-test.cluster.version>6.8</stargate.int-test.cluster.version>
-        <stargate.int-test.cluster.dse>true</stargate.int-test.cluster.dse>
-      </properties>
+      <id>cassandra-50</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
     </profile>
     <!-- The deployment profile must be used only with the sgv2-quarkus-common   -->
     <profile>

@@ -307,6 +307,12 @@ public final class DocsApiUtils {
     }
   }
 
+  public static float[] getVectorFromRow(RowWrapper row, DocumentProperties properties) {
+    String columnName = properties.tableProperties().vectorValueColumnName();
+
+    return row.isNull(columnName) ? null : row.getVector(columnName);
+  }
+
   /**
    * Tests if the given row exactly matches the path, where path is defined by the list of strings.
    *

@@ -35,7 +35,6 @@ import io.stargate.bridge.proto.StargateBridgeGrpc.StargateBridgeStub;
 import io.stargate.it.BaseIntegrationTest;
 import io.stargate.it.http.RestUtils;
 import io.stargate.it.http.models.Credentials;
-import io.stargate.it.storage.IfBundleAvailable;
 import io.stargate.it.storage.StargateConnectionInfo;
 import java.io.IOException;
 import java.util.Arrays;
@@ -44,7 +43,6 @@ import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
-@IfBundleAvailable(bundleName = "bridge")
 public class BridgeIntegrationTest extends BaseIntegrationTest {
   private static final ObjectMapper objectMapper = new ObjectMapper();
 

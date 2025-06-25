@@ -31,7 +31,7 @@ import io.stargate.it.storage.StargateParameters;
 import io.stargate.it.storage.StargateSpec;
 import io.stargate.proto.QueryOuterClass;
 import io.stargate.proto.StargateGrpc;
-import io.stargate.testing.TestingServicesActivator;
+import io.stargate.testing.TestingServicesModule;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -55,8 +55,8 @@ public class MetricsGrpcIntTest extends GrpcIntegrationTest {
 
   public static void buildParameters(StargateParameters.Builder builder) {
     builder.putSystemProperties(
-        TestingServicesActivator.GRPC_TAG_PROVIDER_PROPERTY,
-        TestingServicesActivator.AUTHORITY_GRPC_TAG_PROVIDER);
+        TestingServicesModule.GRPC_TAG_PROVIDER_PROPERTY,
+        TestingServicesModule.AUTHORITY_GRPC_TAG_PROVIDER);
   }
 
   @BeforeAll

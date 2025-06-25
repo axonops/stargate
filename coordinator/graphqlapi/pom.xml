@@ -5,15 +5,12 @@
   <parent>
     <groupId>io.stargate</groupId>
     <artifactId>stargate</artifactId>
-    <version>2.0.34-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
   </parent>
   <!-- Artifact props -->
   <groupId>io.stargate.graphql</groupId>
   <artifactId>graphqlapi</artifactId>
   <name>Stargate - Coordinator - Graphql API (deprecated)</name>
-  <properties>
-    <osgi.bundle.version>${project.version}</osgi.bundle.version>
-  </properties>
   <dependencies>
     <!-- Stargate component dependencies -->
     <dependency>
@@ -145,46 +142,9 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <configuration>
-          <unpackBundle>true</unpackBundle>
-          <instructions>
-            <Bundle-Name>GraphqlAPI</Bundle-Name>
-            <Bundle-Description>Graphql API for Stargate project</Bundle-Description>
-            <Bundle-SymbolicName>io.stargate.graphql</Bundle-SymbolicName>
-            <Bundle-Activator>io.stargate.graphql.GraphqlActivator</Bundle-Activator>
-            <Embed-Transitive>true</Embed-Transitive>
-            <Import-Package><![CDATA[
-                            org.slf4j,
-                            org.slf4j.helpers,
-                            org.slf4j.spi,
-                            org.osgi.framework,
-                            io.stargate.db.*,
-                            org.apache.cassandra.stargate,
-                            org.apache.cassandra.stargate.*,
-                            com.datastax.oss.driver.api.core,
-                            com.datastax.oss.driver.api.core.*,
-                            org.javatuples,
-                            io.stargate.core.*,
-                            io.stargate.auth,
-                            io.stargate.auth.*,
-                            com.codahale.metrics,
-                            com.codahale.metrics.*,
-                            io.micrometer.core.*,
-                            com.datastax.oss.driver.shaded.guava.common.*,
-                        ]]></Import-Package>
-            <Export-Package>!*</Export-Package>
-            <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
-          </instructions>
-          <buildDirectory>${project.basedir}/../stargate-lib</buildDirectory>
-        </configuration>
-      </plugin>
-      <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
           <archive>
-            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
             <manifestEntries>
               <x-Stargate-Health-Checkers>graphql</x-Stargate-Health-Checkers>
             </manifestEntries>

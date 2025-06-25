@@ -73,6 +73,7 @@ public class ToProtoValueCodecs {
   protected static final DurationCodec CODEC_DURATION = new DurationCodec();
   protected static final InetCodec CODEC_INET = new InetCodec();
   protected static final BlobCodec CODEC_BLOB = new BlobCodec();
+  protected static final VectorCodec CODEC_VECTOR = new VectorCodec();
 
   public ToProtoValueCodecs() {}
 
@@ -100,6 +101,8 @@ public class ToProtoValueCodecs {
         return tupleCodecFor(columnSpec, type.getTuple(), requestParams);
       case UDT:
         return udtCodecFor(columnSpec, type.getUdt(), requestParams);
+      case VECTOR:
+        return vectorCodecFor(columnSpec, type.getVector(), requestParams);
 
         // Invalid cases:
       case SPEC_NOT_SET:
@@ -220,6 +223,15 @@ public class ToProtoValueCodecs {
       fieldCodecs.put(fieldName, codecFor(columnSpec, entry.getValue(), requestParams));
     }
     return new UDTCodec(udtSpec.getName(), fieldCodecs);
+  }
+
+  protected ToProtoValueCodec vectorCodecFor(
+      QueryOuterClass.ColumnSpec columnSpec,
+      QueryOuterClass.TypeSpec.Vector vectorSpec,
+      RequestParams requestParams) {
+    // For now, we only support float vectors as that's what Cassandra 5.0 supports
+    // The element type is stored in vectorSpec but we'll validate it's float
+    return CODEC_VECTOR;
   }
 
   protected static String columnDesc(QueryOuterClass.ColumnSpec columnSpec) {
@@ -962,6 +974,58 @@ public class ToProtoValueCodecs {
       Map<String, QueryOuterClass.Value> decoded = new LinkedHashMap<>();
       StringifiedValueUtil.decodeStringifiedUDT(value, fieldCodecs, udtName, decoded);
       return Values.udtOf(decoded);
+    }
+  }
+
+  protected static final class VectorCodec extends ToProtoScalarCodecBase {
+    public VectorCodec() {
+      super("TypeSpec.VECTOR");
+    }
+
+    @Override
+    public QueryOuterClass.Value protoValueFromStrictlyTyped(Object value) {
+      if (value instanceof List<?>) {
+        List<?> list = (List<?>) value;
+        List<Float> floatList = new ArrayList<>(list.size());
+        for (Object element : list) {
+          if (element instanceof Number) {
+            floatList.add(((Number) element).floatValue());
+          } else {
+            throw new IllegalArgumentException(
+                "Vector elements must be numbers, got: " + (element != null ? element.getClass() : "null"));
+          }
+        }
+        return Values.vector(floatList);
+      } else if (value instanceof float[]) {
+        return Values.vector((float[]) value);
+      }
+      return cannotCoerce(value);
+    }
+
+    @Override
+    public QueryOuterClass.Value protoValueFromStringified(String value) {
+      // Expect format like "[1.0, 2.0, 3.0]"
+      value = value.trim();
+      if (!value.startsWith("[") || !value.endsWith("]")) {
+        return invalidStringValue(value);
+      }
+      
+      String content = value.substring(1, value.length() - 1).trim();
+      if (content.isEmpty()) {
+        return Values.vector(new ArrayList<>());
+      }
+      
+      String[] parts = content.split(",");
+      List<Float> floatList = new ArrayList<>(parts.length);
+      try {
+        for (String part : parts) {
+          floatList.add(Float.parseFloat(part.trim()));
+        }
+      } catch (NumberFormatException e) {
+        return invalidStringValue(value);
+      }
+      
+      return Values.vector(floatList);
     }
   }
 }

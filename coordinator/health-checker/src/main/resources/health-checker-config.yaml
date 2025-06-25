@@ -1,12 +1,13 @@
 server:
-  type: health-checker
-  applicationContextPath: /
-  adminContextPath: /admin
-  connector:
-    type: http
-    port: 8084
+  applicationConnectors:
+    - type: http
+      port: 8084
+  adminConnectors:
+    - type: http
+      port: 8085
   requestLog:
-    type: external
+    appenders: []
+
+# Disable Dropwizard logging since we use external logback
 logging:
   type: external
-

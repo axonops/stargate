@@ -84,6 +84,11 @@ abstract class FieldTypeCache<GraphqlT> {
    */
   protected abstract GraphqlT compute(ColumnType columnType);
 
+  protected boolean isVector(ColumnType columnType) {
+    // Check if this is a vector type
+    return columnType.rawType() == Type.Vector;
+  }
+
   protected GraphQLScalarType getScalar(Type type) {
     switch (type) {
       case Boolean:

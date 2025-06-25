@@ -122,6 +122,22 @@ public interface RowWrapper {
     return Values.bool(getValue(columnName));
   }
 
+  /**
+   * @return Value of the column as float array (vector).
+   * @throws IllegalArgumentException If column does not exist.
+   */
+  default float[] getVector(String columnName) {
+    List<Float> vectorList = Values.vector(getValue(columnName));
+    if (vectorList == null) {
+      return null;
+    }
+    float[] result = new float[vectorList.size()];
+    for (int i = 0; i < vectorList.size(); i++) {
+      result[i] = vectorList.get(i);
+    }
+    return result;
+  }
+
   private Value getValue(String columnName) {
     int i = firstIndexOf(columnName);
     if (i < 0) {

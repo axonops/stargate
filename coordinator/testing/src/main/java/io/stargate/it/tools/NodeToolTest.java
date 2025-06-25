@@ -61,10 +61,6 @@ public class NodeToolTest extends BaseIntegrationTest {
     cmd.addArgument("--cluster-version");
     cmd.addArgument(backend.clusterVersion());
 
-    if (backend.isDse()) {
-      cmd.addArgument("--dse");
-    }
-
     return cmd;
   }
 

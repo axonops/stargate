@@ -1,19 +1,13 @@
 package io.stargate.health;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 import com.codahale.metrics.health.HealthCheck.Result;
 import io.stargate.db.Persistence;
-import java.util.Collection;
-import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 
 /*
  * Copyright The Stargate Authors
@@ -32,61 +26,51 @@ import org.osgi.framework.ServiceReference;
  */
 class SchemaAgreementCheckerTest {
 
-  private BundleContext context;
   private Persistence persistence;
   private SchemaAgreementChecker checker;
 
   @BeforeEach
-  public void setup() throws InvalidSyntaxException {
-    context = Mockito.mock(BundleContext.class);
+  public void setup() {
     persistence = Mockito.mock(Persistence.class);
-    checker = new SchemaAgreementChecker(context);
-
-    @SuppressWarnings("unchecked")
-    ServiceReference<Persistence> ref = Mockito.mock(ServiceReference.class);
-    Collection<ServiceReference<Persistence>> refs = Collections.singletonList(ref);
-    Mockito.when(context.getServiceReferences(eq(Persistence.class), any())).thenReturn(refs);
-
-    Mockito.when(context.getService(eq(ref))).thenReturn(persistence);
+    checker = new SchemaAgreementChecker(persistence);
   }
 
   @Test
-  public void shouldSucceedWithNoPersistence() throws InvalidSyntaxException {
-    Mockito.when(context.getServiceReferences(eq(Persistence.class), any()))
-        .thenReturn(Collections.emptyList());
+  public void shouldSucceedWithNoPersistence() {
+    checker = new SchemaAgreementChecker(null);
     assertThat(checker.execute()).extracting(Result::isHealthy).isEqualTo(true);
   }
 
   @Test
   public void shouldSucceedWhenSchemasAgree() {
-    Mockito.doReturn(true).when(persistence).isInSchemaAgreement();
+    when(persistence.isInSchemaAgreement()).thenReturn(true);
     assertThat(checker.execute()).extracting(Result::isHealthy).isEqualTo(true);
   }
 
   @Test
   public void shouldSucceedWhenSchemaAgreesWithStorage() {
-    Mockito.doReturn(false).when(persistence).isInSchemaAgreement();
-    Mockito.doReturn(true).when(persistence).isInSchemaAgreementWithStorage();
+    when(persistence.isInSchemaAgreement()).thenReturn(false);
+    when(persistence.isInSchemaAgreementWithStorage()).thenReturn(true);
     assertThat(checker.execute()).extracting(Result::isHealthy).isEqualTo(true);
   }
 
   @Test
   public void shouldSucceedWhenAgreementIsAchievable() {
-    Mockito.doReturn(false).when(persistence).isInSchemaAgreement();
-    Mockito.doReturn(true).when(persistence).isSchemaAgreementAchievable();
+    when(persistence.isInSchemaAgreement()).thenReturn(false);
+    when(persistence.isSchemaAgreementAchievable()).thenReturn(true);
     assertThat(checker.execute()).extracting(Result::isHealthy).isEqualTo(true);
   }
 
   @Test
   public void shouldFailWhenAgreementIsNotAchievable() {
-    Mockito.doReturn(false).when(persistence).isInSchemaAgreement();
-    Mockito.doReturn(false).when(persistence).isSchemaAgreementAchievable();
+    when(persistence.isInSchemaAgreement()).thenReturn(false);
+    when(persistence.isSchemaAgreementAchievable()).thenReturn(false);
     assertThat(checker.execute()).extracting(Result::isHealthy).isEqualTo(false);
   }
 
   @Test
-  public void shouldFailOnException() throws InvalidSyntaxException {
-    Mockito.doThrow(new RuntimeException("test-exception")).when(persistence).isInSchemaAgreement();
+  public void shouldFailOnException() {
+    when(persistence.isInSchemaAgreement()).thenThrow(new RuntimeException("test-exception"));
     assertThat(checker.execute()).extracting(Result::isHealthy).isEqualTo(false);
   }
 }

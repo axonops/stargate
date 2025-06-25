@@ -70,7 +70,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '8'
+          java-version: '17'
           cache: maven
 
       - name: Setup Maven
@@ -97,7 +97,7 @@ jobs:
         run: |
           cd coordinator/
           mvn -B -ntp versions:set -DremoveSnapshot versions:commit
-          mvn -P dse -B -ntp -q -ff clean package -DskipTests
+          mvn -B -ntp -q -ff clean package -DskipTests
 
       - name: Zip-up `stargate-lib`
         run: |
@@ -124,7 +124,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '8'
+          java-version: '17'
           cache: maven
 
       - name: Setup Maven
@@ -164,7 +164,7 @@ jobs:
         run: |
           cd coordinator/
           ./mvnw -B -ntp versions:set -DremoveSnapshot versions:commit
-          ./mvnw -B -ntp -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }} clean deploy -DskipTests -P deploy,dse
+          ./mvnw -B -ntp -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }} clean deploy -DskipTests -P deploy
 
       - name: Generate changelog
         continue-on-error: true
@@ -175,8 +175,8 @@ jobs:
       - name: Bump versions
         run: |
           cd coordinator/
-          ./mvnw -B -ntp release:update-versions -DautoVersionSubmodules=true versions:commit -Pdse
-          ./mvnw -B -ntp xml-format:xml-format fmt:format -Pdse
+          ./mvnw -B -ntp release:update-versions -DautoVersionSubmodules=true versions:commit
+          ./mvnw -B -ntp xml-format:xml-format fmt:format
 
       - name: Rev Version
         if: success()
@@ -199,7 +199,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        repo: [ 'stargate/stargate', 'stargate/docker-images', 'riptano/c2', 'riptano/dse-astra-auth-lib']
+        repo: [ 'stargate/stargate', 'stargate/docker-images', 'riptano/c2' ]
         include:
           - repo: stargate/stargate
             secret: SG_EVENTS_PAT
@@ -208,9 +208,6 @@ jobs:
             secret: SG_EVENTS_PAT
 
           - repo: riptano/c2
-            secret: STARGATE_GH_RELEASE
-
-          - repo: riptano/dse-astra-auth-lib
             secret: STARGATE_GH_RELEASE
 
     steps:

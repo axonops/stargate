@@ -8,9 +8,7 @@ replicaCount: 1
 # Coordinator or bridge registry and image
 image:
   registry: "docker.io"
-  repository311: "stargateio/coordinator-3_11" 
-  repository40: "stargateio/coordinator-4_0" 
-  repositoryDse68: "stargateio/coordinator-dse-68" 
+  repository50: "stargateio/coordinator-5_0" 
   tag: "v2"
 
 # Storage cassandra details
@@ -19,8 +17,7 @@ cassandra:
   dcName: "datacenter1"
   rack: "rack1"
   seed: "my-release-cassandra-headless.default.svc.cluster.local" 
-  isDse: null
-  clusterVersion: "4.0"
+  clusterVersion: "5.0"
   enableCqlAuth: true
 
 # Probe values for coordinator

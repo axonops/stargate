@@ -19,27 +19,11 @@ You need to add the explicit order in case:
 
 ### Running Integration Tests
 
-When running tests you need to select the Storage implementation to test against.
-
-#### Cassandra 3.11
+To run integration tests with Cassandra 5.0:
 
 ```shell
 ./mvnw clean install -DskipTests
-./mvnw -pl testing -P it-cassandra-3.11 verify -DskipUnitTests
-```
-
-#### Cassandra 4.0
-
-```shell
-./mvnw clean install -DskipTests
-./mvnw -pl testing -P it-cassandra-4.0 verify -DskipUnitTests
-```
-
-#### DSE 6.8
-
-```shell
-./mvnw -P dse clean install -DskipTests
-./mvnw -pl testing -P dse -P it-dse-6.8 verify -DskipUnitTests
+./mvnw -pl testing -P it-cassandra-5.0 verify -DskipUnitTests
 ```
 
 -----

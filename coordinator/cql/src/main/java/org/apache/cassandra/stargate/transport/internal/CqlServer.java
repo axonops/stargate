@@ -701,7 +701,7 @@ public class CqlServer {
 
     /**
      * If no explicit port is specified then use the server socket's listening port. An explicit
-     * port is provided for Cassandra 4.0 peers and when using proxy protocol.
+     * port is provided for Cassandra 5.0 peers and when using proxy protocol.
      *
      * @param port An explicit port to use or {@link EventListener#NO_PORT}
      * @return The server socket's listening port when {@link EventListener#NO_PORT} is provided;

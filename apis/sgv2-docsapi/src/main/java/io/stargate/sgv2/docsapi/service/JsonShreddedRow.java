@@ -56,4 +56,8 @@ public interface JsonShreddedRow {
   // booleans can be int or bools, storage should handle
   @Nullable
   Boolean getBooleanValue();
+
+  // vectors stored as float array for Cassandra 5.0 VECTOR type
+  @Nullable
+  float[] getVectorValue();
 }

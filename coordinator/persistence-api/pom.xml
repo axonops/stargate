@@ -5,7 +5,7 @@
   <parent>
     <groupId>io.stargate</groupId>
     <artifactId>stargate</artifactId>
-    <version>2.0.34-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
   </parent>
   <!-- Artifact props -->
   <groupId>io.stargate.db</groupId>
@@ -29,13 +29,6 @@
         <version>${netty.version}</version>
         <type>pom</type>
         <scope>import</scope>
-      </dependency>
-      <!-- To upgrade StringTemplate version Duzzt uses, easiest to force here
-        -->
-      <dependency>
-        <groupId>org.antlr</groupId>
-        <artifactId>ST4</artifactId>
-        <version>4.3.3</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -76,14 +69,13 @@
       <version>1.2.3</version>
     </dependency>
     <dependency>
-      <groupId>com.github.misberner.duzzt</groupId>
-      <artifactId>duzzt-processor</artifactId>
-      <version>0.1.0</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>org.javatuples</groupId>
       <artifactId>javatuples</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.annotation</groupId>
+      <artifactId>javax.annotation-api</artifactId>
+      <version>1.3.2</version>
     </dependency>
     <!-- Test dependencies -->
     <dependency>
@@ -99,7 +91,7 @@
     <dependency>
       <groupId>org.apache.cassandra</groupId>
       <artifactId>cassandra-all</artifactId>
-      <version>4.0.17</version>
+      <version>5.0.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -111,50 +103,8 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <configuration>
-          <unpackBundle>true</unpackBundle>
-          <instructions>
-            <Bundle-Name>Persistence</Bundle-Name>
-            <Bundle-Description>DB component for project</Bundle-Description>
-            <Bundle-SymbolicName>io.stargate.db</Bundle-SymbolicName>
-            <Bundle-Activator>io.stargate.db.DbActivator</Bundle-Activator>
-            <Import-Package><![CDATA[
-              org.slf4j,
-              org.slf4j.helpers,
-              org.slf4j.spi,
-              org.osgi.framework,
-              io.stargate.core.*,
-              io.micrometer.core.*
-            ]]></Import-Package>
-            <Export-Package><![CDATA[
-              io.stargate.db,
-              io.stargate.db.datastore,
-              io.stargate.db.metrics.*,
-              io.stargate.db.query,
-              io.stargate.db.query.builder,
-              io.stargate.db.schema,
-              io.stargate.db.limiter,
-              io.stargate.db.tracing,
-              org.javatuples,
-              org.apache.cassandra.stargate,
-              org.apache.cassandra.stargate.*,
-              com.datastax.oss.driver.api.*,
-              com.datastax.oss.driver.internal.*,
-              com.datastax.oss.driver.shaded.guava.common.*,
-            ]]></Export-Package>
-            <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
-            <Embed-Transitive>true</Embed-Transitive>
-          </instructions>
-        </configuration>
-      </plugin>
-      <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
-          <archive>
-            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-          </archive>
           <outputDirectory>${project.basedir}/../stargate-lib</outputDirectory>
         </configuration>
       </plugin>

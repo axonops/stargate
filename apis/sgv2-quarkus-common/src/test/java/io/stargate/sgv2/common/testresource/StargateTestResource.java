@@ -40,21 +40,20 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
 /**
- * Quarkus test resource that starts Cassandra/DSE and Stargate Coordinator using test containers.
+ * Quarkus test resource that starts Cassandra and Stargate Coordinator using test containers.
  *
  * <p>Should be used in the integration tests, that should be explicitly annotated with {@link
  * WithTestResource} class: <code>@QuarkusTestResource(value = StargateTestResource.class)</code>
  * (and usually with {@code initArgs} property set as well).
  *
  * <p>When run from IDE, by default it uses container versions specified in {@link Defaults}. If you
- * wish to run locally with different Cassandra version or the DSE, please set up following system
+ * wish to run locally with different Cassandra version, please set up following system
  * properties:
  *
  * <ol>
  *   <li><code>testing.containers.cassandra-image</code>
  *   <li><code>testing.containers.stargate-image</code>
  *   <li><code>testing.containers.cluster-version</code>
- *   <li><code>testing.containers.cluster-dse</code>
  *   <li><code>testing.containers.cassandra-startup-timeout</code>
  *   <li><code>testing.containers.coordinator-startup-timeout</code>
  * </ol>
@@ -69,20 +68,18 @@ public class StargateTestResource
    * Set of defaults for the integration tests, usually used when running from IDE.
    *
    * <p><b>IMPORTANT:</b> If changing defaults please update the default properties in the pom.xml
-   * for the cassandra-40 profile.
+   * for the cassandra-50 profile.
    */
   interface Defaults {
 
     String CASSANDRA_IMAGE = "cassandra";
-    String CASSANDRA_IMAGE_TAG = "4.0.17";
+    String CASSANDRA_IMAGE_TAG = "5.0";
 
-    String STARGATE_IMAGE = "stargateio/coordinator-4_0";
+    String STARGATE_IMAGE = "stargateio/coordinator-5_0";
     String STARGATE_IMAGE_TAG = "v2";
 
     String CLUSTER_NAME = "int-test-cluster";
-    String CLUSTER_VERSION = "4.0";
-
-    String CLUSTER_DSE = null;
+    String CLUSTER_VERSION = "5.0";
 
     /**
      * Default cassandra start up timeout value in minutes, this can be override using System
@@ -157,7 +154,7 @@ public class StargateTestResource
         cassandraContainer.getMappedPort(9042).toString());
 
     // Some Integration tests need to know backend storage version, to work around
-    // discrepancies between Cassandra/DSE versions
+    // discrepancies between Cassandra versions
     propsBuilder.put(IntegrationTestUtils.CLUSTER_VERSION_PROP, getClusterVersion());
 
     // log props and return them
@@ -247,12 +244,8 @@ public class StargateTestResource
             .waitingFor(Wait.forLogMessage(".*Created default superuser role.*\\n", 1))
             .withStartupTimeout(getCassandraStartupTimeout())
             .withReuse(reuse);
-    // note that cluster name props differ in case of DSE
-    if (isDse()) {
-      container.withEnv("CLUSTER_NAME", getClusterName()).withEnv("DS_LICENSE", "accept");
-    } else {
-      container.withEnv("CASSANDRA_CLUSTER_NAME", getClusterName());
-    }
+    // Cassandra 5.0 only
+    container.withEnv("CASSANDRA_CLUSTER_NAME", getClusterName());
     return container;
   }
 
@@ -274,10 +267,6 @@ public class StargateTestResource
             .withStartupTimeout(getCoordinatorStartupTimeout())
             .withReuse(reuse);
 
-    // enable DSE if needed
-    if (isDse()) {
-      container.withEnv("DSE", "1");
-    }
     return container;
   }
 
@@ -312,11 +301,6 @@ public class StargateTestResource
 
   public static String getClusterVersion() {
     return System.getProperty("testing.containers.cluster-version", Defaults.CLUSTER_VERSION);
-  }
-
-  private boolean isDse() {
-    String dse = System.getProperty("testing.containers.cluster-dse", Defaults.CLUSTER_DSE);
-    return "true".equals(dse);
   }
 
   /**

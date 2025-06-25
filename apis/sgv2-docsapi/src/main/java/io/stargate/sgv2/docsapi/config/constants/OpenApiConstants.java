@@ -98,6 +98,8 @@ public interface OpenApiConstants {
 
     String GENERAL_400 = "GENERAL_400";
     String GENERAL_401 = "GENERAL_401";
+    String GENERAL_404 = "GENERAL_404";
+    String GENERAL_409 = "GENERAL_409";
     String GENERAL_500 = "GENERAL_500";
     String GENERAL_503 = "GENERAL_503";
   }

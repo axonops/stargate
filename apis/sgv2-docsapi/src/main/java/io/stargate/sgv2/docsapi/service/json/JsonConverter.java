@@ -344,8 +344,16 @@ public class JsonConverter {
     String stringValue = DocsApiUtils.getStringFromRow(row, docsProperties);
     Boolean booleanValue = DocsApiUtils.getBooleanFromRow(row, docsProperties, numericBooleans);
     Double doubleValue = DocsApiUtils.getDoubleFromRow(row, docsProperties);
+    float[] vectorValue = DocsApiUtils.getVectorFromRow(row, docsProperties);
 
-    if (stringValue != null) {
+    if (vectorValue != null) {
+      // Convert vector to JSON array
+      ArrayNode arrayNode = mapper.createArrayNode();
+      for (float f : vectorValue) {
+        arrayNode.add(f);
+      }
+      n = arrayNode;
+    } else if (stringValue != null) {
       if (stringValue.equals(Constants.EMPTY_OBJECT_MARKER)) {
         n = mapper.createObjectNode();
       } else if (stringValue.equals(Constants.EMPTY_ARRAY_MARKER)) {

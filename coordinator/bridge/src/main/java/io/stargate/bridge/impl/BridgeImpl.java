@@ -94,7 +94,7 @@ public class BridgeImpl {
     try {
       server.shutdown();
       // Since we provided our own executor, it's our responsibility to shut it down.
-      // Note that we don't handle restarts because GrpcActivator never reuses an existing instance
+      // Note that we don't handle restarts because BridgeService never reuses an existing instance
       // (and that wouldn't work anyway, because Server doesn't support it either).
       executor.shutdown();
 

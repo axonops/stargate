@@ -419,4 +419,53 @@ public class ValuesTest {
           .hasMessageContaining("Expected TIME value, received NULL");
     }
   }
+
+  @Nested
+  public class VectorTest {
+
+    @Test
+    public void encodeDecodeFloatArray() {
+      float[] expected = new float[] {1.0f, 2.0f, 3.0f};
+      Value value = Values.vector(expected);
+      float[] result = Values.vectorArray(value);
+      assertThat(result).isEqualTo(expected);
+    }
+
+    @Test
+    public void encodeDecodeFloatList() {
+      java.util.List<Float> expected = java.util.Arrays.asList(1.0f, 2.0f, 3.0f);
+      Value value = Values.vector(expected);
+      java.util.List<Float> result = Values.vector(value);
+      assertThat(result).isEqualTo(expected);
+    }
+
+    @Test
+    public void encodeDecodeEmptyVector() {
+      float[] expected = new float[0];
+      Value value = Values.vector(expected);
+      float[] result = Values.vectorArray(value);
+      assertThat(result).isEqualTo(expected);
+    }
+
+    @Test
+    public void encodeDecodeLargeVector() {
+      float[] expected = new float[1536];
+      for (int i = 0; i < expected.length; i++) {
+        expected[i] = i * 0.1f;
+      }
+      Value value = Values.vector(expected);
+      float[] result = Values.vectorArray(value);
+      assertThat(result).isEqualTo(expected);
+    }
+
+    @Test
+    public void invalidType() {
+      assertThatThrownBy(
+              () -> {
+                Values.vector(Values.NULL);
+              })
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("Expected VECTOR value, received NULL");
+    }
+  }
 }

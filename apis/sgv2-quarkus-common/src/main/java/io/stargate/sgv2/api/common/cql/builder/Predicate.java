@@ -25,6 +25,7 @@ public enum Predicate {
   IN("IN"),
   CONTAINS("CONTAINS"),
   CONTAINS_KEY("CONTAINS KEY"),
+  LIKE("LIKE"),
   ;
 
   private final String cql;

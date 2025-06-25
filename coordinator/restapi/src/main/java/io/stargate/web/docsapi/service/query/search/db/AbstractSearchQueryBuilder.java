@@ -24,6 +24,7 @@ import io.stargate.db.query.builder.BuiltQuery;
 import io.stargate.db.query.builder.QueryBuilder;
 import io.stargate.db.query.builder.QueryBuilderImpl;
 import io.stargate.web.docsapi.service.query.DocsApiConstants;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -89,7 +90,7 @@ public abstract class AbstractSearchQueryBuilder {
       Integer limit,
       List<QueryBuilderImpl.FunctionCall> functions,
       String... columns) {
-    QueryBuilder.QueryBuilder__21 builder =
+    QueryBuilder builder =
         queryBuilder
             .get()
             .select()
@@ -97,7 +98,7 @@ public abstract class AbstractSearchQueryBuilder {
             .function(functions)
             .writeTimeColumn(DocsApiConstants.LEAF_COLUMN_NAME)
             .from(keyspace, table)
-            .where(getPredicates());
+            .where(new ArrayList<>(getPredicates()));
 
     // then all bind able predicates
     for (Map.Entry<String, Predicate> entry : getBindPredicates().entrySet()) {
@@ -105,7 +106,7 @@ public abstract class AbstractSearchQueryBuilder {
     }
 
     // resolve the allow limit
-    QueryBuilder.QueryBuilder__44 limitBuilder = builder.limit(limit);
+    QueryBuilder limitBuilder = builder.limit(limit);
     if (allowFiltering()) {
       return limitBuilder.allowFiltering().build();
     } else {

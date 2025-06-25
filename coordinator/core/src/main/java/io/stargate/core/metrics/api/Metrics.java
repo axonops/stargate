@@ -7,8 +7,8 @@ import io.micrometer.core.instrument.Tags;
 /**
  * Entry point to the Stargate metrics.
  *
- * <p>This gets registered as a service in the OSGi bundle context. It can be accessed by
- * extensions, either to publish their own metrics, or access existing metrics and expose them.
+ * <p>This gets registered as a service in the service registry. It can be accessed by extensions,
+ * either to publish their own metrics, or access existing metrics and expose them.
  */
 public interface Metrics {
 

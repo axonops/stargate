@@ -2052,7 +2052,6 @@ public abstract class PersistenceTest {
   }
 
   private boolean isCassandra4() {
-    return !backend.isDse()
-        && Version.parse(backend.clusterVersion()).nextStable().compareTo(Version.V4_0_0) >= 0;
+    return Version.parse(backend.clusterVersion()).nextStable().compareTo(Version.V4_0_0) >= 0;
   }
 }

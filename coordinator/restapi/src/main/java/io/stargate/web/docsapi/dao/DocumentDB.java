@@ -211,8 +211,8 @@ public class DocumentDB {
   }
 
   /**
-   * Drops indexes for `tableName` and adds SAI indexes in their place. Only works if `isDse` is
-   * true.
+   * Drops indexes for `tableName` and adds SAI indexes in their place. Only works if SAI is
+   * supported.
    *
    * <p>This could cause performance degradation and/or disrupt in-flight requests, since indexes
    * are being dropped and re-created.

@@ -1,13 +1,15 @@
 [![Maven Central](https://img.shields.io/maven-central/v/io.stargate/stargate.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/io.stargate/stargate/)
 
-# Stargate
+# Stargate v3.0
 
-An open source data API gateway.
+An open source data API gateway with native vector search support.
 
 Stargate is a data gateway deployed between client applications and a Cassandra database.
 For developers, it makes it easy to use Cassandra for any application workload by adding plugin support for new APIs, data types, and access methods - even secondary database models. 
 It's built with extensibility as a first-class citizen to enable rapid innovation. 
 For operators, Stargate introduces microservice architecture, allowing independent deployment and scale of storage nodes, API Service nodes, and coordinator nodes in Cassandra clusters.
+
+> **Note**: Stargate v3.0 requires **Cassandra 5.0** and **Java 17** or later. Previous Cassandra versions (3.11, 4.0) and DSE are no longer supported.
 
 - For quick instructions on how to bring up Stargate on your desktop using Docker, check out the [Docker compose](docker-compose/README.md) instructions.
 - If you wish to deploy in Kubernetes, there is also a [Helm chart](helm/README.md) you can use to install Stargate alongside an existing Cassandra cluster, or visit the [K8ssandra](https://k8ssandra.io) project for a distribution that packages Cassandra, Stargate, and additional tooling.
@@ -16,9 +18,30 @@ For operators, Stargate introduces microservice architecture, allowing independe
 - To set up and use a Stargate development environment, see the instructions for the [coordinator](coordinator/README.md) and [APIs](apis/README.md).
 
 ## Contents
+- [What's New in v3.0](#whats-new-in-v30)
 - [Introduction](#introduction)
 - [Repositories](#repositories)
 - [Issue Management](#issue-management)
+
+## What's New in v3.0
+
+### Major Architecture Changes
+- **Removed OSGi Framework**: Simplified architecture with standard Java service loading
+- **Cassandra 5.0 Only**: Dropped support for older versions to leverage new features
+- **Java 17 Required**: Modernized to use latest Java LTS version
+
+### New Features
+- **Vector Search**: Native support for similarity search using Cassandra 5.0's vector capabilities
+  - Cosine similarity, dot product, and Euclidean distance metrics
+  - Approximate Nearest Neighbor (ANN) queries
+  - Available in REST, GraphQL, and Document APIs
+- **Enhanced Filtering**: New operators for advanced queries
+  - `$contains` for collection searches
+  - `$containsKey` for map key searches  
+  - `$like` for pattern matching
+- **Improved Performance**: Faster startup and reduced memory usage
+
+See [CHANGELOG-v3.0.0.md](CHANGELOG-v3.0.0.md) for detailed release notes.
 
 ## Introduction
 
@@ -59,12 +82,10 @@ Stargate coordinator nodes support a pluggable approach for implementing the coo
 
 - [persistence-api](coordinator/persistence-api): Interface for working with persistence services 
 - [persistence-common](coordinator/persistence-common): Utilities shared by the persistence services
-- [persistence-cassandra-3.11](coordinator/persistence-cassandra-3.11): Joins C* 3.11 cluster as coordinator-only node (does not store data)
+- [persistence-cassandra-5.0](coordinator/persistence-cassandra-5.0): Joins C* 5.0 cluster as coordinator-only node (does not store data)
 mocks C* system tables for native driver integration,
 executes requests with C* storage nodes using C* QueryHandler/QueryProcessor,
 converts internal C* objects and ResultSets to Stargate Datastore objects.
-- [persistence-cassandra-4.0](coordinator/persistence-cassandra-4.0): (same as above but for Cassandra 4.0)
-- [persistence-dse-6.8](coordinator/persistence-dse-6.8): (same as above but for DataStax Enterprise 6.8)
 
 #### Authentication and Authorization Services
 Stargate coordinator nodes also support a pluggable authentication and authorization approach.

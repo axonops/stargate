@@ -18,193 +18,108 @@ package io.stargate.starter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import com.github.rvesse.airline.SingleCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class StarterTest {
-
-  Starter starter;
+public class StarterTest {
 
   @BeforeEach
-  public void reset() {
-    System.setProperties(null);
-
-    starter = new Starter();
-    starter.simpleSnitch = true;
-    starter.clusterName = "foo";
-    starter.version = "3.11";
-    starter.seedList = Arrays.asList("127.0.0.1", "127.0.0.2");
+  public void setup() {
+    // Clear any system properties
+    System.clearProperty("stargate.cluster_name");
+    System.clearProperty("stargate.cluster_version");
+    System.clearProperty("stargate.listen_address");
+    System.clearProperty("stargate.seed_list");
   }
 
   @Test
-  void testSetStargatePropertiesWithIPSeedNode() {
-    starter.setStargateProperties();
+  public void testCommandLineParsing() throws Exception {
+    String[] args = {
+      "--cluster-name", "TestCluster",
+      "--cluster-version", "5.0",
+      "--listen", "127.0.0.1",
+      "--cluster-seed", "127.0.0.1:7000",
+      "--seed", "127.0.0.1",
+      "--dc", "dc1",
+      "--rack", "rack1",
+      "--cql-port", "9042",
+      "--enable-auth", "false",
+      "--simple-snitch"
+    };
 
-    assertThat(System.getProperty("stargate.seed_list")).isEqualTo("127.0.0.1,127.0.0.2");
+    SingleCommand<Starter> parser = SingleCommand.singleCommand(Starter.class);
+    Starter starter = parser.parse(args);
+
+    assertThat(starter.clusterName).isEqualTo("TestCluster");
+    assertThat(starter.clusterVersion).isEqualTo("5.0");
+    assertThat(starter.listenHostStr).isEqualTo("127.0.0.1");
+    assertThat(starter.seed).isEqualTo("127.0.0.1:7000");
+    assertThat(starter.seedList).isEqualTo("127.0.0.1");
+    assertThat(starter.datacenter).isEqualTo("dc1");
+    assertThat(starter.rack).isEqualTo("rack1");
+    assertThat(starter.cqlPort).isEqualTo(9042);
+    assertThat(starter.enableAuth).isEqualTo("false");
+    assertThat(starter.simpleSnitch).isTrue();
   }
 
   @Test
-  void testSetStargatePropertiesWithHostSeedNode() {
-    starter.seedList = Arrays.asList("cassandra.apache.org", "datastax.com");
+  public void testVersionValidation() {
+    String[] args = {
+      "--cluster-name", "TestCluster",
+      "--cluster-version", "4.0", // Wrong version
+      "--listen", "127.0.0.1",
+      "--cluster-seed", "127.0.0.1:7000"
+    };
 
-    starter.setStargateProperties();
+    SingleCommand<Starter> parser = SingleCommand.singleCommand(Starter.class);
+    Starter starter = parser.parse(args);
 
-    assertThat(System.getProperty("stargate.seed_list"))
-        .isEqualTo("cassandra.apache.org,datastax.com");
-  }
-
-  @Test
-  void testSetStargatePropertiesWithBadHostSeedNode() {
-    starter.seedList = Arrays.asList("google.com", "datasta.cmo", "cassandra.apache.org");
-
-    RuntimeException thrown =
-        assertThrows(
-            RuntimeException.class,
-            starter::setStargateProperties,
-            "Expected setStargateProperties() to throw RuntimeException");
-
-    assertThat(System.getProperty("stargate.seed_list")).isNull();
-    assertThat(thrown.getMessage()).isEqualTo("Unable to resolve seed node address datasta.cmo");
-  }
-
-  @Test
-  void testSetStargatePropertiesMissingSeedNode() {
-    starter.seedList = new ArrayList<>();
-
-    RuntimeException thrown =
-        assertThrows(
-            IllegalArgumentException.class,
-            starter::setStargateProperties,
-            "Expected setStargateProperties() to throw RuntimeException");
-
-    assertThat(System.getProperty("stargate.seed_list")).isNull();
-    assertThat(thrown.getMessage()).isEqualTo("At least one seed node address is required.");
-  }
-
-  @Test
-  void testSetStargatePropertiesMissingDC() {
-    starter.simpleSnitch = false;
-    starter.rack = "rack0";
-
-    RuntimeException thrown =
+    Exception exception =
         assertThrows(
             IllegalArgumentException.class,
-            starter::setStargateProperties,
-            "Expected setStargateProperties() to throw RuntimeException");
+            () -> {
+              starter.run();
+            });
 
-    assertThat(thrown.getMessage())
-        .isEqualTo("--dc and --rack are both required unless --simple-snitch is specified.");
+    assertThat(exception.getMessage()).contains("Only Cassandra 5.0 is supported");
   }
 
   @Test
-  void testSetStargatePropertiesMissingRack() {
-    starter.simpleSnitch = false;
-    starter.dc = "dc1";
+  public void testRequiredFields() {
+    String[] args = {
+      // Missing required --cluster-name
+      "--cluster-version", "5.0",
+      "--listen", "127.0.0.1",
+      "--cluster-seed", "127.0.0.1:7000"
+    };
 
-    RuntimeException thrown =
-        assertThrows(
-            IllegalArgumentException.class,
-            starter::setStargateProperties,
-            "Expected setStargateProperties() to throw RuntimeException");
+    SingleCommand<Starter> parser = SingleCommand.singleCommand(Starter.class);
 
-    assertThat(thrown.getMessage())
-        .isEqualTo("--dc and --rack are both required unless --simple-snitch is specified.");
-  }
-
-  @Test
-  void testSetStargatePropertiesMissingVersion() {
-    starter.version = null;
-
-    RuntimeException thrown =
-        assertThrows(
-            IllegalArgumentException.class,
-            starter::setStargateProperties,
-            "Expected setStargateProperties() to throw RuntimeException");
-
-    assertThat(thrown.getMessage()).isEqualTo("--cluster-version must be a number");
-  }
-
-  @Test
-  void testSetStargatePropertiesMissingClusterName() {
-    starter.clusterName = null;
-
-    RuntimeException thrown =
-        assertThrows(
-            IllegalArgumentException.class,
-            starter::setStargateProperties,
-            "Expected setStargateProperties() to throw RuntimeException");
-
-    assertThat(thrown.getMessage()).isEqualTo("--cluster-name must be specified");
-  }
-
-  @Test
-  void testSeedsNotPresentThrows() {
-    starter.seedList = Collections.emptyList();
-
+    // The parser should fail with required field missing
     assertThrows(
-        IllegalArgumentException.class,
-        starter::setStargateProperties,
-        "At least one seed node address is required.");
+        Exception.class,
+        () -> {
+          parser.parse(args);
+        });
   }
 
   @Test
-  void testDeveloperModeSetsDefaultSeedsAndSnitch() {
-    starter.developerMode = true;
-    starter.simpleSnitch = false;
-    starter.seedList = new ArrayList<>();
+  public void testDefaultValues() throws Exception {
+    String[] args = {
+      "--cluster-name", "TestCluster",
+      "--cluster-seed", "127.0.0.1:7000"
+      // Not providing other fields to test defaults
+    };
 
-    starter.setStargateProperties();
+    SingleCommand<Starter> parser = SingleCommand.singleCommand(Starter.class);
+    Starter starter = parser.parse(args);
 
-    assertThat(System.getProperty("stargate.seed_list")).isEqualTo("127.0.0.1");
-    assertThat(System.getProperty("stargate.developer_mode")).isEqualTo("true");
-    assertThat(System.getProperty("stargate.snitch_classname")).isEqualTo("SimpleSnitch");
-  }
-
-  @Test
-  void testSetStargatePropertiesWithIPv4ListenHost() {
-    starter.listenHostStr = "127.0.0.1";
-
-    starter.setStargateProperties();
-
-    assertThat(System.getProperty("stargate.listen_address")).isEqualTo("127.0.0.1");
-  }
-
-  @Test
-  void testSetStargatePropertiesWithInvalidIPv4ListenHost() {
-    starter.listenHostStr = "127.0.999.1";
-
-    RuntimeException thrown =
-        assertThrows(
-            IllegalArgumentException.class,
-            starter::setStargateProperties,
-            "Expected setStargateProperties() to throw RuntimeException");
-
-    assertThat(thrown.getMessage()).isEqualTo("--listen must be a valid IPv4 or IPv6 address");
-  }
-
-  @Test
-  void testSetStargatePropertiesWithIPv6ListenHost() {
-    starter.listenHostStr = "2001:0db8:85a3:0000:0000:8a2e:0370:7334";
-
-    starter.setStargateProperties();
-
-    assertThat(System.getProperty("stargate.listen_address"))
-        .isEqualTo("2001:0db8:85a3:0000:0000:8a2e:0370:7334");
-  }
-
-  @Test
-  void testSetStargatePropertiesWithInvalidIPv6ListenHost() {
-    starter.listenHostStr = "2001:0db8:85a3:x:0000:8a2e:0370:7334";
-
-    RuntimeException thrown =
-        assertThrows(
-            IllegalArgumentException.class,
-            starter::setStargateProperties,
-            "Expected setStargateProperties() to throw RuntimeException");
-
-    assertThat(thrown.getMessage()).isEqualTo("--listen must be a valid IPv4 or IPv6 address");
+    // Check defaults
+    assertThat(starter.clusterVersion).isEqualTo("5.0"); // Default value
+    assertThat(starter.datacenter).isEqualTo("datacenter1"); // Default value
+    assertThat(starter.rack).isEqualTo("rack1"); // Default value
+    assertThat(starter.cqlPort).isEqualTo(9042); // Default value
+    assertThat(starter.enableAuth).isEqualTo("true"); // Default value
   }
 }

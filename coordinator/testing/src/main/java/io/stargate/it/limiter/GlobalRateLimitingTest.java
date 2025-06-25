@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
-import io.stargate.db.DbActivator;
+import io.stargate.db.PersistenceConstants;
 import io.stargate.it.BaseIntegrationTest;
 import io.stargate.it.TestOrder;
 import io.stargate.it.driver.CqlSessionExtension;
@@ -26,7 +26,8 @@ public class GlobalRateLimitingTest extends BaseIntegrationTest {
 
   @SuppressWarnings("unused") // referenced in @StargateSpec
   public static void buildParameters(StargateParameters.Builder builder) {
-    builder.putSystemProperties(DbActivator.RATE_LIMITING_ID_PROPERTY, "GlobalRateLimiting");
+    builder.putSystemProperties(
+        PersistenceConstants.RATE_LIMITING_ID_PROPERTY, "GlobalRateLimiting");
     builder.putSystemProperties("stargate.limiter.global.rate_qps", "1");
   }
 

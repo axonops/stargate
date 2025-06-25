@@ -28,7 +28,6 @@ import io.stargate.grpc.StargateBearerToken;
 import io.stargate.it.BaseIntegrationTest;
 import io.stargate.it.http.RestUtils;
 import io.stargate.it.http.models.Credentials;
-import io.stargate.it.storage.IfBundleAvailable;
 import io.stargate.it.storage.StargateConnectionInfo;
 import io.stargate.proto.QueryOuterClass.BatchParameters;
 import io.stargate.proto.QueryOuterClass.BatchQuery;
@@ -48,7 +47,6 @@ import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
-@IfBundleAvailable(bundleName = "grpc")
 public class GrpcIntegrationTest extends BaseIntegrationTest {
   private static final ObjectMapper objectMapper = new ObjectMapper();
 

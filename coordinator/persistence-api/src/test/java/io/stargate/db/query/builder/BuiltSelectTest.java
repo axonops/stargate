@@ -83,7 +83,7 @@ class BuiltSelectTest extends BuiltQueryTest {
   }
 
   public static Stream<Arguments> functionsToTest() {
-    Supplier<QueryBuilder.QueryBuilder__20> base = () -> newBuilder().select().column("k2", "v1");
+    Supplier<QueryBuilder> base = () -> newBuilder().select().column("k2", "v1");
 
     return Stream.of(
         arguments(

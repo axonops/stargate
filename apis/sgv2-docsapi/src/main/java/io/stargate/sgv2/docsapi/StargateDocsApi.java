@@ -88,9 +88,12 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
                   description =
                       """
                       A JSON blob with search filters:
-                      * allowed predicates: `$eq`, `$ne`, `$in`, `$nin`, `$gt`, `$lt`, `$gte`, `$lte`, `$exists`
+                      * allowed predicates: `$eq`, `$ne`, `$in`, `$nin`, `$gt`, `$lt`, `$gte`, `$lte`, `$exists`, `$like`, `$contains`, `$containsKey`
                       * allowed boolean operators: `$and`, `$or`, `$not`
                       * allowed hints: `$selectivity` (a number between 0.0 and 1.0, less is better), defines conditions that should be search for first
+                      * LIKE patterns: Use `%` for multi-character wildcard, `_` for single-character wildcard
+                      * CONTAINS: For array fields, matches documents where the array contains the specified value
+                      * CONTAINS KEY: For object fields, matches documents where the object contains the specified key
                       * Use `\\` to escape periods, commas, and asterisks
                       """,
                   examples = {
@@ -160,6 +163,36 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
                                       {"location": {"$eq": "London"}},
                                       {"race.competitors": {"$gt": 10, "$selectivity": 0}}
                                   ]
+                              }
+                              """),
+                    @ExampleObject(
+                        name = "where.like",
+                        summary = "LIKE pattern matching",
+                        value =
+                            """
+                              {
+                                  "email": {"$like": "%@example.com"},
+                                  "name": {"$like": "John%"}
+                              }
+                              """),
+                    @ExampleObject(
+                        name = "where.contains",
+                        summary = "CONTAINS for arrays",
+                        value =
+                            """
+                              {
+                                  "tags": {"$contains": "javascript"},
+                                  "categories": {"$contains": "web"}
+                              }
+                              """),
+                    @ExampleObject(
+                        name = "where.containsKey",
+                        summary = "CONTAINS KEY for objects",
+                        value =
+                            """
+                              {
+                                  "metadata": {"$containsKey": "version"},
+                                  "user.preferences": {"$containsKey": "theme"}
                               }
                               """),
                   }),
@@ -640,6 +673,39 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
                           examples = {
                             @ExampleObject(
                                 ref = OpenApiConstants.Examples.GENERAL_SERVER_SIDE_ERROR),
+                          },
+                          schema = @Schema(implementation = ApiError.class))),
+              @APIResponse(
+                  name = OpenApiConstants.Responses.GENERAL_404,
+                  responseCode = "404",
+                  description = "Not found.",
+                  content =
+                      @Content(
+                          mediaType = MediaType.APPLICATION_JSON,
+                          examples = {
+                            @ExampleObject(
+                                ref = OpenApiConstants.Examples.NAMESPACE_DOES_NOT_EXIST),
+                            @ExampleObject(
+                                ref = OpenApiConstants.Examples.COLLECTION_DOES_NOT_EXIST),
+                            @ExampleObject(ref = OpenApiConstants.Examples.DOCUMENT_DOES_NOT_EXIST),
+                          },
+                          schema = @Schema(implementation = ApiError.class))),
+              @APIResponse(
+                  name = OpenApiConstants.Responses.GENERAL_409,
+                  responseCode = "409",
+                  description = "Conflict.",
+                  content =
+                      @Content(
+                          mediaType = MediaType.APPLICATION_JSON,
+                          examples = {
+                            @ExampleObject(
+                                value =
+                                    """
+                                    {
+                                        "code": 409,
+                                        "description": "Index with name 'email_idx' already exists."
+                                    }
+                                    """),
                           },
                           schema = @Schema(implementation = ApiError.class))),
               @APIResponse(

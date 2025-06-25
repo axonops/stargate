@@ -177,9 +177,19 @@ public class OrExpressionDocumentsResolver implements DocumentsResolver {
         children.stream()
             .filter(e -> e.getCondition().isPersistenceCondition())
             .map(
-                isPersistenceCondition ->
-                    new FilterExpressionSearchQueryBuilder(
-                        documentProperties, isPersistenceCondition))
+                isPersistenceCondition -> {
+                  // Use specialized builder for CONTAINS conditions
+                  if (isPersistenceCondition.getCondition()
+                      instanceof
+                      io.stargate.sgv2.docsapi.service.query.condition.impl.ContainsCondition) {
+                    return new io.stargate.sgv2.docsapi.service.query.search.db.impl
+                        .ContainsFilterExpressionSearchQueryBuilder(
+                        documentProperties, isPersistenceCondition);
+                  } else {
+                    return new FilterExpressionSearchQueryBuilder(
+                        documentProperties, isPersistenceCondition);
+                  }
+                })
             .collect(Collectors.toList());
 
     // for the memory ones, we can collect only distinct filter paths

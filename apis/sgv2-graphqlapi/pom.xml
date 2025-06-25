@@ -5,7 +5,7 @@
   <parent>
     <groupId>io.stargate</groupId>
     <artifactId>sgv2-api-parent</artifactId>
-    <version>2.0.34-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
   </parent>
   <!-- Artifact props -->
   <artifactId>sgv2-graphqlapi</artifactId>
@@ -204,7 +204,6 @@
                 <testing.containers.stargate-image>${stargate.int-test.coordinator.image}:${stargate.int-test.coordinator.image-tag}</testing.containers.stargate-image>
                 <testing.containers.cluster-name>${stargate.int-test.cluster.name}</testing.containers.cluster-name>
                 <testing.containers.cluster-version>${stargate.int-test.cluster.version}</testing.containers.cluster-version>
-                <testing.containers.cluster-dse>${stargate.int-test.cluster.dse}</testing.containers.cluster-dse>
               </systemPropertyVariables>
               <includes>
                 <include>**/*IntegrationTest.*</include>

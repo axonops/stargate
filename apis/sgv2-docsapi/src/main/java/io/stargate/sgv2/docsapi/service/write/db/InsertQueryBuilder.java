@@ -117,6 +117,8 @@ public class InsertQueryBuilder {
     values.addValues(row.getStringValue() == null ? Values.NULL : Values.of(row.getStringValue()));
     values.addValues(row.getDoubleValue() == null ? Values.NULL : Values.of(row.getDoubleValue()));
     values.addValues(convertToBackendBooleanValue(row.getBooleanValue(), numericBooleans));
+    values.addValues(
+        row.getVectorValue() == null ? Values.NULL : Values.vector(row.getVectorValue()));
 
     if (ttl != null) {
       values.addValues(Values.of(ttl));

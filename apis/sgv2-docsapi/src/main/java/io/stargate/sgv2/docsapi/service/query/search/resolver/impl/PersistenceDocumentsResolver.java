@@ -65,7 +65,26 @@ public class PersistenceDocumentsResolver implements DocumentsResolver {
           "PersistenceDocumentsResolver works only with the persistence conditions.");
     }
 
-    this.queryBuilder = new FilterExpressionSearchQueryBuilder(documentProperties, expressions);
+    // Check if all expressions are CONTAINS conditions on the same path
+    boolean allContains =
+        expressions.stream()
+            .allMatch(
+                e ->
+                    e.getCondition()
+                        instanceof
+                        io.stargate.sgv2.docsapi.service.query.condition.impl.ContainsCondition);
+
+    if (allContains && expressions.size() == 1) {
+      // Use specialized query builder for single CONTAINS expression
+      this.queryBuilder =
+          new io.stargate.sgv2.docsapi.service.query.search.db.impl
+              .ContainsFilterExpressionSearchQueryBuilder(
+              documentProperties, expressions.iterator().next());
+    } else {
+      // Use standard query builder for other cases
+      this.queryBuilder = new FilterExpressionSearchQueryBuilder(documentProperties, expressions);
+    }
+
     this.context = createContext(context, expressions);
     this.documentProperties = documentProperties;
   }

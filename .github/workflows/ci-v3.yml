@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'v3.*'
+  pull_request:
+    branches:
+      - main
+      - 'v3.*'
+
+env:
+  MAVEN_OPTS: '-Xmx4g'
+
+jobs:
+  # Build and test coordinator
+  coordinator:
+    name: Coordinator Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Build and Test Coordinator
+        working-directory: coordinator
+        run: ./mvnw -B -ntp clean install
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: coordinator-test-reports
+          path: coordinator/**/target/surefire-reports/
+
+  # Build and test APIs
+  apis:
+    name: APIs Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Build and Test APIs
+        working-directory: apis
+        run: ./mvnw -B -ntp clean install
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: apis-test-reports
+          path: apis/**/target/surefire-reports/
+
+  # Integration tests
+  integration-tests:
+    name: Integration Tests
+    needs: [coordinator, apis]
+    runs-on: ubuntu-latest
+    services:
+      cassandra:
+        image: cassandra:5.0
+        ports:
+          - 9042:9042
+        options: >-
+          --health-cmd "cqlsh -e 'SELECT now() FROM system.local'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Wait for Cassandra
+        run: |
+          for i in {1..30}; do
+            if docker exec ${{ job.services.cassandra.id }} cqlsh -e "SELECT now() FROM system.local" > /dev/null 2>&1; then
+              echo "Cassandra is ready"
+              break
+            fi
+            echo "Waiting for Cassandra... ($i/30)"
+            sleep 10
+          done
+
+      - name: Run Coordinator Integration Tests
+        working-directory: coordinator
+        run: ./mvnw -B -ntp verify -DskipUnitTests
+        env:
+          CASSANDRA_CONTACT_POINTS: localhost:9042
+
+      - name: Run API Integration Tests
+        working-directory: apis
+        run: ./mvnw -B -ntp verify -DskipUnitTests
+        env:
+          CASSANDRA_CONTACT_POINTS: localhost:9042
+
+  # Code quality checks
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Check formatting (Coordinator)
+        working-directory: coordinator
+        run: ./mvnw -B -ntp com.coveo:fmt-maven-plugin:check
+
+      - name: Check formatting (APIs)
+        working-directory: apis
+        run: ./mvnw -B -ntp com.spotify.fmt:fmt-maven-plugin:check
+
+      - name: Check XML formatting
+        run: |
+          cd coordinator && ./mvnw -B -ntp xml-format:xml-check
+          cd ../apis && ./mvnw -B -ntp xml-format:xml-check

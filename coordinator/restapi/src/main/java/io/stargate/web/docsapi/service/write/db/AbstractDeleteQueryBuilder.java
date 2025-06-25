@@ -30,7 +30,7 @@ import java.util.function.Supplier;
 public abstract class AbstractDeleteQueryBuilder {
 
   /** @return Consumer for altering the where conditions. */
-  protected abstract Consumer<QueryBuilder.QueryBuilder__40> whereConsumer();
+  protected abstract Consumer<QueryBuilder> whereConsumer();
 
   /**
    * Builds the query for this query builder.
@@ -42,7 +42,7 @@ public abstract class AbstractDeleteQueryBuilder {
    */
   public final BuiltQuery<? extends BoundQuery> buildQuery(
       Supplier<QueryBuilder> queryBuilder, String keyspace, String table) {
-    QueryBuilder.QueryBuilder__40 where =
+    QueryBuilder where =
         queryBuilder
             .get()
             .delete()

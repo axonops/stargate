@@ -24,7 +24,7 @@ import io.stargate.it.TestOrder;
 import io.stargate.it.storage.StargateConnectionInfo;
 import io.stargate.it.storage.StargateParameters;
 import io.stargate.it.storage.StargateSpec;
-import io.stargate.testing.TestingServicesActivator;
+import io.stargate.testing.TestingServicesModule;
 import io.stargate.testing.metrics.TagMeHttpMetricsTagProvider;
 import java.io.IOException;
 import java.time.Duration;
@@ -37,7 +37,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
@@ -65,8 +64,8 @@ public class MetricsTest extends BaseIntegrationTest {
   @SuppressWarnings("unused") // referenced in @StargateSpec
   public static void buildParameters(StargateParameters.Builder builder) {
     builder.putSystemProperties(
-        TestingServicesActivator.HTTP_TAG_PROVIDER_PROPERTY,
-        TestingServicesActivator.TAG_ME_HTTP_TAG_PROVIDER);
+        TestingServicesModule.HTTP_TAG_PROVIDER_PROPERTY,
+        TestingServicesModule.TAG_ME_HTTP_TAG_PROVIDER);
     builder.putSystemProperties("stargate.metrics.http_server_requests_percentiles", "0.95,0.99");
     builder.putSystemProperties(
         "stargate.metrics.http_server_requests_path_param_tags", "keyspaceName");
@@ -166,13 +165,7 @@ public class MetricsTest extends BaseIntegrationTest {
 
   @Test
   public void dropwizardMetricsPersistence() throws IOException {
-    String expectedPrefix;
-    if (backend.isDse()) {
-      expectedPrefix =
-          "persistence_dse_" + StringUtils.remove(backend.clusterVersion(), '.').substring(0, 2);
-    } else {
-      expectedPrefix = "persistence_cassandra_" + backend.clusterVersion().replace('.', '_');
-    }
+    String expectedPrefix = "persistence_cassandra_" + backend.clusterVersion().replace('.', '_');
 
     String result = RestUtils.get("", String.format("%s:8084/metrics", host), HttpStatus.SC_OK);
 

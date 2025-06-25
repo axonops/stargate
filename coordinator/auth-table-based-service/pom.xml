@@ -5,7 +5,7 @@
   <parent>
     <groupId>io.stargate</groupId>
     <artifactId>stargate</artifactId>
-    <version>2.0.34-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
   </parent>
   <!-- Artifact props -->
   <groupId>io.stargate.auth.table</groupId>
@@ -42,12 +42,6 @@
       <version>0.4</version>
     </dependency>
     <!-- Test dependencies -->
-    <!-- 21-Sep-2021, tatu: If you need to use Guava for NON-test code (runtime),
-             note that you need to BOTH change scope to "runtime" AND add
-             OSGi import: see f.ex "cql/pom.xml" for example of how to do it.
-             But make sure you really want Guava and there is no alternative as
-             we are trying to reduce Guava usage to avoid version conflicts
-      -->
     <dependency>
       <groupId>com.datastax.oss</groupId>
       <artifactId>java-driver-shaded-guava</artifactId>
@@ -72,38 +66,8 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <configuration>
-          <unpackBundle>true</unpackBundle>
-          <instructions>
-            <Bundle-Name>AuthTableBasedService</Bundle-Name>
-            <Bundle-Description>AuthTableBasedService component for project</Bundle-Description>
-            <Bundle-SymbolicName>io.stargate.auth.table</Bundle-SymbolicName>
-            <Bundle-Activator>io.stargate.auth.table.AuthTableBasedServiceActivator</Bundle-Activator>
-            <Import-Package><![CDATA[
-              org.slf4j,
-              org.slf4j.helpers,
-              org.slf4j.spi,
-              org.osgi.framework,
-              io.stargate.core.*,
-              io.stargate.auth,
-              io.stargate.db.*,
-              org.apache.cassandra.stargate,
-              org.apache.cassandra.stargate.*,
-              org.javatuples,
-            ]]></Import-Package>
-            <Export-Package>!*</Export-Package>
-            <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
-          </instructions>
-        </configuration>
-      </plugin>
-      <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
-          <archive>
-            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-          </archive>
           <outputDirectory>${project.basedir}/../stargate-lib</outputDirectory>
         </configuration>
       </plugin>

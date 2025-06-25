@@ -18,7 +18,10 @@ package io.stargate.sgv2.docsapi.service.query.filter.operation;
 
 import io.stargate.sgv2.docsapi.service.query.condition.provider.ConditionProvider;
 import io.stargate.sgv2.docsapi.service.query.condition.provider.impl.BasicConditionProvider;
+import io.stargate.sgv2.docsapi.service.query.condition.provider.impl.ContainsConditionProvider;
+import io.stargate.sgv2.docsapi.service.query.condition.provider.impl.ContainsKeyConditionProvider;
 import io.stargate.sgv2.docsapi.service.query.condition.provider.impl.ExistsConditionProvider;
+import io.stargate.sgv2.docsapi.service.query.condition.provider.impl.LikeConditionProvider;
 import io.stargate.sgv2.docsapi.service.query.condition.provider.impl.ListConditionProvider;
 import io.stargate.sgv2.docsapi.service.query.filter.operation.impl.EqFilterOperation;
 import io.stargate.sgv2.docsapi.service.query.filter.operation.impl.GtFilterOperation;
@@ -44,7 +47,10 @@ public enum FilterOperationCode {
   GTE("$gte", BasicConditionProvider.of(GteFilterOperation.of())),
   EXISTS("$exists", new ExistsConditionProvider()),
   IN("$in", ListConditionProvider.of(InFilterOperation.of())),
-  NIN("$nin", ListConditionProvider.of(NotInFilterOperation.of()));
+  NIN("$nin", ListConditionProvider.of(NotInFilterOperation.of())),
+  LIKE("$like", LikeConditionProvider.of(false)),
+  CONTAINS("$contains", ContainsConditionProvider.of(false)),
+  CONTAINS_KEY("$containsKey", new ContainsKeyConditionProvider());
 
   /** Raw value. */
   private final String rawValue;

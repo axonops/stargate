@@ -35,6 +35,7 @@ import io.stargate.graphql.schema.cqlfirst.ddl.fetchers.AlterTableAddFetcher;
 import io.stargate.graphql.schema.cqlfirst.ddl.fetchers.AlterTableDropFetcher;
 import io.stargate.graphql.schema.cqlfirst.ddl.fetchers.CreateIndexFetcher;
 import io.stargate.graphql.schema.cqlfirst.ddl.fetchers.CreateKeyspaceFetcher;
+import io.stargate.graphql.schema.cqlfirst.ddl.fetchers.CreateSAIIndexFetcher;
 import io.stargate.graphql.schema.cqlfirst.ddl.fetchers.CreateTableFetcher;
 import io.stargate.graphql.schema.cqlfirst.ddl.fetchers.CreateTypeFetcher;
 import io.stargate.graphql.schema.cqlfirst.ddl.fetchers.DropIndexFetcher;
@@ -63,6 +64,7 @@ public class DdlSchemaBuilder {
                 buildCreateType(),
                 buildDropType(),
                 buildCreateIndex(),
+                buildCreateSAIIndex(),
                 buildDropIndex(),
                 buildCreateKeyspace(),
                 buildDropKeyspace()))
@@ -464,6 +466,52 @@ public class DdlSchemaBuilder {
         .build();
   }
 
+  private GraphQLFieldDefinition buildCreateSAIIndex() {
+    return GraphQLFieldDefinition.newFieldDefinition()
+        .name("createSAIIndex")
+        .description(
+            "Creates a Storage Attached Index (SAI) for Cassandra 5.0 with simplified options")
+        .argument(
+            GraphQLArgument.newArgument().name("keyspaceName").type(nonNull(Scalars.GraphQLString)))
+        .argument(
+            GraphQLArgument.newArgument().name("tableName").type(nonNull(Scalars.GraphQLString)))
+        .argument(
+            GraphQLArgument.newArgument().name("columnName").type(nonNull(Scalars.GraphQLString)))
+        .argument(GraphQLArgument.newArgument().name("indexName").type(Scalars.GraphQLString))
+        .argument(GraphQLArgument.newArgument().name("ifNotExists").type(Scalars.GraphQLBoolean))
+        // Text analysis options
+        .argument(
+            GraphQLArgument.newArgument()
+                .name("normalize")
+                .description("For text columns: normalize the text (default: true)")
+                .type(Scalars.GraphQLBoolean))
+        .argument(
+            GraphQLArgument.newArgument()
+                .name("caseSensitive")
+                .description("For text columns: case-sensitive matching (default: false)")
+                .type(Scalars.GraphQLBoolean))
+        .argument(
+            GraphQLArgument.newArgument()
+                .name("asciiOnly")
+                .description("For text columns: ASCII-only mode (default: false)")
+                .type(Scalars.GraphQLBoolean))
+        .argument(
+            GraphQLArgument.newArgument()
+                .name("analyzerClass")
+                .description("Custom analyzer class for text analysis")
+                .type(Scalars.GraphQLString))
+        // Vector options
+        .argument(
+            GraphQLArgument.newArgument()
+                .name("similarityFunction")
+                .description(
+                    "For vector columns: similarity function (cosine, euclidean, dot_product)")
+                .type(buildSimilarityFunction()))
+        .type(Scalars.GraphQLBoolean)
+        .dataFetcher(new CreateSAIIndexFetcher())
+        .build();
+  }
+
   private GraphQLFieldDefinition buildDropIndex() {
     return GraphQLFieldDefinition.newFieldDefinition()
         .name("dropIndex")
@@ -475,6 +523,17 @@ public class DdlSchemaBuilder {
         .type(Scalars.GraphQLBoolean)
         .dataFetcher(new DropIndexFetcher())
         .build();
+  }
+
+  private GraphQLEnumType buildSimilarityFunction() {
+    return register(
+        GraphQLEnumType.newEnum()
+            .name("SimilarityFunction")
+            .description("Similarity functions for vector indexes in SAI")
+            .value("cosine", "Cosine similarity - best for normalized vectors")
+            .value("euclidean", "Euclidean distance - for geometric similarity")
+            .value("dot_product", "Dot product - for non-normalized vectors")
+            .build());
   }
 
   private GraphQLEnumType buildIndexKind() {

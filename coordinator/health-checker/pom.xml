@@ -5,7 +5,7 @@
   <parent>
     <groupId>io.stargate</groupId>
     <artifactId>stargate</artifactId>
-    <version>2.0.34-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
   </parent>
   <!-- Artifact props -->
   <groupId>io.stargate.health</groupId>
@@ -113,45 +113,8 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <configuration>
-          <unpackBundle>true</unpackBundle>
-          <instructions>
-            <Bundle-Name>HealthChecker</Bundle-Name>
-            <Bundle-Description>HealthChecker for Stargate project</Bundle-Description>
-            <Bundle-SymbolicName>io.stargate.health</Bundle-SymbolicName>
-            <Bundle-Activator>io.stargate.health.HealthCheckerActivator</Bundle-Activator>
-            <Embed-Transitive>true</Embed-Transitive>
-            <Import-Package><![CDATA[
-              org.slf4j,
-              org.slf4j.helpers,
-              org.slf4j.spi,
-              org.osgi.framework,
-              com.codahale.metrics,
-              com.codahale.metrics.*,
-              io.micrometer.core.*,
-              io.stargate.core.*,
-              io.stargate.db.*,
-              org.apache.cassandra.stargate,
-              org.apache.cassandra.stargate.*,
-              org.javatuples,
-            ]]></Import-Package>
-            <Export-Package>!*</Export-Package>
-            <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
-          </instructions>
-          <buildDirectory>${project.basedir}/../stargate-lib</buildDirectory>
-        </configuration>
-      </plugin>
-      <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
-          <archive>
-            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-            <manifestEntries>
-              <x-Stargate-Health-Checkers>deadlocks,bundles,datastore,storage</x-Stargate-Health-Checkers>
-            </manifestEntries>
-          </archive>
           <outputDirectory>${project.basedir}/../stargate-lib</outputDirectory>
         </configuration>
       </plugin>

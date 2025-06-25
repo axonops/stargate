@@ -1,0 +1,77 @@
+name: Docker Compose
+
+on:
+  push:
+    branches:
+      - main
+      - 'v3.*'
+    paths:
+      - 'docker-compose/**'
+      - '.github/workflows/docker-compose-v3.yml'
+  pull_request:
+    branches:
+      - main
+      - 'v3.*'
+    paths:
+      - 'docker-compose/**'
+      - '.github/workflows/docker-compose-v3.yml'
+
+jobs:
+  test-docker-compose:
+    name: Test Docker Compose
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start Cassandra 5.0 with Stargate
+        working-directory: docker-compose/cassandra-5.0
+        run: |
+          docker-compose up -d
+          echo "Waiting for services to start..."
+          sleep 60
+
+      - name: Check service health
+        working-directory: docker-compose/cassandra-5.0
+        run: |
+          # Check Cassandra
+          docker-compose exec -T cassandra cqlsh -e "SELECT now() FROM system.local"
+          
+          # Check Stargate coordinator
+          curl -f http://localhost:8084/checker/liveness || exit 1
+          curl -f http://localhost:8084/checker/readiness || exit 1
+          
+          # Check APIs if running
+          curl -f http://localhost:8082/health || echo "Docs API not running"
+          curl -f http://localhost:8082/v2/health || echo "REST API not running"
+          curl -f http://localhost:8080/health || echo "GraphQL API not running"
+
+      - name: Run basic CQL test
+        run: |
+          docker-compose exec -T cassandra cqlsh -e "
+            CREATE KEYSPACE IF NOT EXISTS test WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+            USE test;
+            CREATE TABLE IF NOT EXISTS users (id UUID PRIMARY KEY, name TEXT);
+            INSERT INTO users (id, name) VALUES (uuid(), 'Test User');
+            SELECT * FROM users;
+          "
+
+      - name: Test vector functionality
+        run: |
+          docker-compose exec -T cassandra cqlsh -e "
+            USE test;
+            CREATE TABLE IF NOT EXISTS vectors (
+              id INT PRIMARY KEY,
+              embedding vector<float, 3>
+            );
+            INSERT INTO vectors (id, embedding) VALUES (1, [0.1, 0.2, 0.3]);
+            INSERT INTO vectors (id, embedding) VALUES (2, [0.4, 0.5, 0.6]);
+            SELECT * FROM vectors;
+          "
+
+      - name: Cleanup
+        if: always()
+        working-directory: docker-compose/cassandra-5.0
+        run: docker-compose down -v

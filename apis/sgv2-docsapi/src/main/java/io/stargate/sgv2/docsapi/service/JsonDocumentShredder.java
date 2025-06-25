@@ -181,7 +181,20 @@ public class JsonDocumentShredder {
       throw new ErrorCodeRuntimeException(ErrorCode.DOCS_API_GENERAL_ARRAY_LENGTH_EXCEEDED);
     }
 
-    // otherwise, iterate all nodes
+    // Check if this array is a vector (all numeric values)
+    if (isVectorArray(node)) {
+      // Process as a vector value
+      float[] vector = new float[node.size()];
+      int i = 0;
+      for (JsonNode element : node) {
+        vector[i++] = element.floatValue();
+      }
+      ImmutableJsonShreddedRow row = rowBuilder.get().vectorValue(vector).build();
+      result.add(row);
+      return;
+    }
+
+    // otherwise, iterate all nodes as regular array
     int idx = 0;
     for (JsonNode inner : node) {
       // convert the array index into path
@@ -259,5 +272,30 @@ public class JsonDocumentShredder {
     // build and add to the results
     ImmutableJsonShreddedRow row = builder.build();
     result.add(row);
+  }
+
+  /**
+   * Checks if an array node represents a vector (all elements are numeric). Vectors are numeric
+   * arrays that should be stored as a single VECTOR value rather than shredded into individual
+   * array elements.
+   *
+   * @param arrayNode The array node to check
+   * @return true if this is a vector array, false otherwise
+   */
+  private boolean isVectorArray(JsonNode arrayNode) {
+    if (!arrayNode.isArray() || arrayNode.isEmpty()) {
+      return false;
+    }
+
+    // Check if all elements are numbers
+    for (JsonNode element : arrayNode) {
+      if (!element.isNumber()) {
+        return false;
+      }
+    }
+
+    // Optionally, we could check for a specific size matching vector dimension
+    // For now, treat any numeric array as a potential vector
+    return true;
   }
 }

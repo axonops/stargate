@@ -49,16 +49,20 @@ public class InsertMutationFetcher extends MutationFetcher {
             && environment.getArgument("ifNotExists") != null
             && (Boolean) environment.getArgument("ifNotExists");
 
-    BoundQuery query =
+    Integer ttl = getTTL(environment);
+    var queryBuilder =
         context
             .getDataStore()
             .queryBuilder()
             .insertInto(table.keyspace(), table.name())
             .value(buildInsertValues(environment))
-            .ifNotExists(ifNotExists)
-            .ttl(getTTL(environment))
-            .build()
-            .bind();
+            .ifNotExists(ifNotExists);
+
+    if (ttl != null) {
+      queryBuilder = queryBuilder.ttl(ttl);
+    }
+
+    BoundQuery query = queryBuilder.build().bind();
 
     context
         .getAuthorizationService()

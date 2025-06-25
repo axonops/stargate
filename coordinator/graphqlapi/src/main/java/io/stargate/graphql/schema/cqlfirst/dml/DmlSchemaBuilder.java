@@ -29,7 +29,6 @@ import static io.stargate.graphql.schema.cqlfirst.dml.fetchers.aggregations.Supp
 import static io.stargate.graphql.schema.cqlfirst.dml.fetchers.aggregations.SupportedGraphqlFunction.VARINT_FUNCTION;
 
 import com.datastax.oss.driver.shaded.guava.common.annotations.VisibleForTesting;
-import com.datastax.oss.driver.shaded.guava.common.collect.ImmutableList;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 import graphql.Scalars;
@@ -60,6 +59,7 @@ import io.stargate.graphql.schema.cqlfirst.dml.fetchers.DeleteMutationFetcher;
 import io.stargate.graphql.schema.cqlfirst.dml.fetchers.InsertMutationFetcher;
 import io.stargate.graphql.schema.cqlfirst.dml.fetchers.QueryFetcher;
 import io.stargate.graphql.schema.cqlfirst.dml.fetchers.UpdateMutationFetcher;
+import io.stargate.graphql.schema.cqlfirst.dml.fetchers.VectorSearchFetcher;
 import io.stargate.graphql.schema.cqlfirst.dml.fetchers.aggregations.SupportedGraphqlFunction;
 import io.stargate.graphql.schema.scalars.CqlScalar;
 import java.util.ArrayList;
@@ -268,7 +268,57 @@ public class DmlSchemaBuilder {
             .dataFetcher(new QueryFetcher(table, nameMapping))
             .build();
 
-    return ImmutableList.of(query, filterQuery);
+    // Add vector search query if the table has vector columns
+    List<GraphQLFieldDefinition> queries = new ArrayList<>();
+    queries.add(query);
+    queries.add(filterQuery);
+
+    // Check if table has vector columns
+    boolean hasVectorColumns =
+        table.columns().stream().anyMatch(col -> col.type().rawType() == Column.Type.Vector);
+
+    if (hasVectorColumns) {
+      queries.add(buildVectorSearchQuery(table));
+    }
+
+    return queries;
+  }
+
+  private GraphQLFieldDefinition buildVectorSearchQuery(Table table) {
+    String graphqlName = nameMapping.getGraphqlName(table);
+    return GraphQLFieldDefinition.newFieldDefinition()
+        .name(graphqlName + "VectorSearch")
+        .description(
+            String.format(
+                "Vector similarity search for the table '%s' using Cassandra 5.0 ANN functionality",
+                table.name()))
+        .argument(
+            GraphQLArgument.newArgument()
+                .name("vectorColumn")
+                .description("The name of the vector column to search")
+                .type(new GraphQLNonNull(GraphQLString)))
+        .argument(
+            GraphQLArgument.newArgument()
+                .name("vector")
+                .description("The query vector to find similar vectors for")
+                .type(new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLFloat)))))
+        .argument(
+            GraphQLArgument.newArgument()
+                .name("limit")
+                .description("Maximum number of results to return (default: 10)")
+                .type(GraphQLInt))
+        .argument(
+            GraphQLArgument.newArgument()
+                .name("filter")
+                .description("Optional filters to apply before vector search")
+                .type(new GraphQLTypeReference(graphqlName + "FilterInput")))
+        .argument(
+            GraphQLArgument.newArgument()
+                .name("options")
+                .type(new GraphQLTypeReference("QueryOptions")))
+        .type(buildEntityResultOutput(table))
+        .dataFetcher(new VectorSearchFetcher(table, nameMapping))
+        .build();
   }
 
   private List<GraphQLFieldDefinition> buildMutations(Table table) {

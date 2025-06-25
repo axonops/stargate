@@ -49,7 +49,7 @@ public class DeleteSubDocumentPathQueryBuilder extends AbstractDeleteQueryBuilde
 
   /** {@inheritDoc} */
   @Override
-  protected Consumer<QueryBuilder.QueryBuilder__40> whereConsumer() {
+  protected Consumer<QueryBuilder> whereConsumer() {
     if (subDocumentPath.size() > maxDepth) {
       throw new ErrorCodeRuntimeException(ErrorCode.DOCS_API_GENERAL_DEPTH_EXCEEDED);
     }

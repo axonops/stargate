@@ -80,9 +80,6 @@ public class AdditionalPortsTest extends BaseIntegrationTest {
     assertThat(localRow.getInetAddress("rpc_address"))
         .isEqualTo(
             localNode.getBroadcastRpcAddress().map(InetSocketAddress::getAddress).orElse(null));
-    if (backend.isDse()) {
-      assertThat(localRow.getInt("native_transport_port")).isEqualTo(port);
-    }
 
     ResultSet rs =
         session.execute(
@@ -94,9 +91,6 @@ public class AdditionalPortsTest extends BaseIntegrationTest {
     rows.forEach(
         row -> {
           rpcAddresses.add(row.getInetAddress("rpc_address"));
-          if (backend.isDse()) {
-            assertThat(row.getInt("native_transport_port")).isEqualTo(port);
-          }
         });
     List<InetAddress> expectedRpcAddresses =
         Streams.stream(nodes)

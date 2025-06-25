@@ -76,8 +76,8 @@ public abstract class CBUtil {
   /**
    * Sets the value to use when deserializing an "unset" bound value.
    *
-   * <p>Within Cassandra/DSE (so, our persistence extensions), unset values are implemented through
-   * a specific ByteBuffer instance, that is a 'public static final' and whose usage is detected
+   * <p>Within Cassandra (so, our persistence extensions), unset values are implemented through a
+   * specific ByteBuffer instance, that is a 'public static final' and whose usage is detected
    * through reference equality. But we can't access that specific object statically, as it leaves
    * within the persistence extension. Instead, that object is exposed through the {@link
    * Persistence#unsetValue()} method, but as this class (which is originally copied from C*) is

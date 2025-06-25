@@ -38,6 +38,9 @@ public interface Constants {
   /** Default name of the boolean value column in the document table. */
   String BOOLEAN_VALUE_COLUMN_NAME = "bool_value";
 
+  /** Default name of the vector value column in the document table. */
+  String VECTOR_VALUE_COLUMN_NAME = "vector_value";
+
   /** The default prefix of the columns that store JSON path. */
   String PATH_COLUMN_PREFIX = "p";
 

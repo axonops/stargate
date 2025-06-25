@@ -1,19 +1,20 @@
 package io.stargate.health;
 
 import com.codahale.metrics.health.HealthCheckRegistry;
-import io.stargate.core.activator.BaseActivator;
 import io.stargate.core.metrics.api.HttpMetricsTagProvider;
 import io.stargate.core.metrics.api.Metrics;
 import io.stargate.core.metrics.api.MetricsScraper;
+import io.stargate.core.services.BaseService;
+import io.stargate.core.services.ServiceDependency;
+import io.stargate.db.Persistence;
+import io.stargate.db.PersistenceConstants;
 import io.stargate.db.datastore.DataStoreFactory;
 import java.util.Arrays;
 import java.util.List;
-import javax.annotation.Nullable;
-import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HealthCheckerActivator extends BaseActivator {
+public class HealthCheckerActivator extends BaseService {
 
   private static final Logger log = LoggerFactory.getLogger(HealthCheckerActivator.class);
 
@@ -23,59 +24,65 @@ public class HealthCheckerActivator extends BaseActivator {
   public static final String DATA_STORE_CHECK_NAME = "datastore";
   public static final String SCHEMA_CHECK_NAME = "schema-agreement";
 
-  private final ServicePointer<Metrics> metrics = ServicePointer.create(Metrics.class);
-  private final ServicePointer<MetricsScraper> metricsScraper =
-      ServicePointer.create(MetricsScraper.class);
-  private final ServicePointer<HttpMetricsTagProvider> httpTagProvider =
-      ServicePointer.create(HttpMetricsTagProvider.class);
-  private final ServicePointer<DataStoreFactory> dataStoreFactory =
-      ServicePointer.create(DataStoreFactory.class);
-  private final ServicePointer<HealthCheckRegistry> healthCheckRegistry =
-      ServicePointer.create(HealthCheckRegistry.class);
+  private WebImpl web;
 
   public HealthCheckerActivator() {
-    super("healthchecker");
+    super("health-checker");
   }
 
   @Override
-  public synchronized void stop(BundleContext context) {
-    healthCheckRegistry.get().unregister(BUNDLES_CHECK_NAME);
-    healthCheckRegistry.get().unregister(DATA_STORE_CHECK_NAME);
-    healthCheckRegistry.get().unregister(STORAGE_CHECK_NAME);
-  }
+  protected void stopServices() throws Exception {
+    log.info("Stopping health-checker...");
 
-  @Nullable
-  @Override
-  protected ServiceAndProperties createService() {
-    log.info("Starting healthchecker....");
-    try {
-      healthCheckRegistry.get().register(BUNDLES_CHECK_NAME, new BundleStateChecker(context));
-      healthCheckRegistry
-          .get()
-          .register(DATA_STORE_CHECK_NAME, new DataStoreHealthChecker(dataStoreFactory.get()));
-      healthCheckRegistry
-          .get()
-          .register(STORAGE_CHECK_NAME, new StorageHealthChecker(dataStoreFactory.get()));
-      healthCheckRegistry.get().register(SCHEMA_CHECK_NAME, new SchemaAgreementChecker(context));
+    HealthCheckRegistry healthCheckRegistry = getService(HealthCheckRegistry.class);
+    healthCheckRegistry.unregister(BUNDLES_CHECK_NAME);
+    healthCheckRegistry.unregister(DATA_STORE_CHECK_NAME);
+    healthCheckRegistry.unregister(STORAGE_CHECK_NAME);
+    healthCheckRegistry.unregister(SCHEMA_CHECK_NAME);
 
-      WebImpl web =
-          new WebImpl(
-              context,
-              metrics.get(),
-              metricsScraper.get(),
-              httpTagProvider.get(),
-              healthCheckRegistry.get());
-      web.start();
-      log.info("Started healthchecker....");
-    } catch (Exception e) {
-      log.error("Failed", e);
+    if (web != null) {
+      web.stop();
     }
-    return null;
+
+    log.info("Stopped health-checker");
   }
 
   @Override
-  protected List<ServicePointer<?>> dependencies() {
+  protected void createServices() throws Exception {
+    log.info("Starting health-checker...");
+
+    // Get service dependencies
+    HealthCheckRegistry healthCheckRegistry = getService(HealthCheckRegistry.class);
+    DataStoreFactory dataStoreFactory = getService(DataStoreFactory.class);
+    Persistence persistence =
+        getService(Persistence.class, "Identifier", PersistenceConstants.PERSISTENCE_IDENTIFIER);
+    Metrics metrics = getService(Metrics.class);
+    MetricsScraper metricsScraper = getService(MetricsScraper.class);
+    HttpMetricsTagProvider httpTagProvider = getService(HttpMetricsTagProvider.class);
+
+    // Register health checks
+    healthCheckRegistry.register(BUNDLES_CHECK_NAME, new ServiceStateChecker());
+    healthCheckRegistry.register(
+        DATA_STORE_CHECK_NAME, new DataStoreHealthChecker(dataStoreFactory));
+    healthCheckRegistry.register(STORAGE_CHECK_NAME, new StorageHealthChecker(dataStoreFactory));
+    healthCheckRegistry.register(SCHEMA_CHECK_NAME, new SchemaAgreementChecker(persistence));
+
+    // Start web server
+    web = new WebImpl(metrics, metricsScraper, httpTagProvider, healthCheckRegistry);
+    web.start();
+
+    log.info("Started health-checker");
+  }
+
+  @Override
+  protected List<ServiceDependency<?>> dependencies() {
     return Arrays.asList(
-        metrics, metricsScraper, httpTagProvider, healthCheckRegistry, dataStoreFactory);
+        ServiceDependency.required(Metrics.class),
+        ServiceDependency.required(MetricsScraper.class),
+        ServiceDependency.required(HttpMetricsTagProvider.class),
+        ServiceDependency.required(HealthCheckRegistry.class),
+        ServiceDependency.required(DataStoreFactory.class),
+        ServiceDependency.required(
+            Persistence.class, "Identifier", PersistenceConstants.PERSISTENCE_IDENTIFIER));
   }
 }

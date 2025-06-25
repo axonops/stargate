@@ -1,0 +1,57 @@
+# Minimal Cassandra 5.0 configuration for Stargate
+cluster_name: '504'
+num_tokens: 256
+commitlog_sync: periodic
+commitlog_sync_period: 10000ms
+authenticator: AllowAllAuthenticator
+authorizer: AllowAllAuthorizer
+role_manager: CassandraRoleManager
+partitioner: org.apache.cassandra.dht.Murmur3Partitioner
+
+# Directories - will be overridden by Stargate
+data_file_directories:
+    - /tmp/stargate/data
+commitlog_directory: /tmp/stargate/commitlog
+saved_caches_directory: /tmp/stargate/saved_caches
+hints_directory: /tmp/stargate/hints
+
+# Network
+storage_port: 7000
+ssl_storage_port: 7001
+native_transport_port: 9042
+rpc_address: 0.0.0.0
+broadcast_rpc_address: 127.0.0.1
+
+# Basic settings
+endpoint_snitch: SimpleSnitch
+
+# The seed provider with correct format for Cassandra 5.0
+seed_provider:
+    class_name: org.apache.cassandra.locator.SimpleSeedProvider
+    parameters:
+        seeds: "172.23.87.115"
+
+# Performance
+concurrent_reads: 32
+concurrent_writes: 32
+concurrent_counter_writes: 32
+
+# Disk failure policy
+disk_failure_policy: stop
+commit_failure_policy: stop
+
+# Required for Cassandra 5.0
+read_request_timeout: 5000ms
+write_request_timeout: 2000ms
+counter_write_request_timeout: 5000ms
+cas_contention_timeout: 1000ms
+truncate_request_timeout: 60000ms
+request_timeout: 10000ms
+range_request_timeout: 10000ms
+
+# Cassandra 5.0 specific settings
+storage_compatibility_mode: NONE
+
+# Disable non-essential features
+cdc_enabled: false
+auto_snapshot: false

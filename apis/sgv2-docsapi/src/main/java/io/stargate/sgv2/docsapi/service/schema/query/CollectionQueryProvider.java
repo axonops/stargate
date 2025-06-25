@@ -117,6 +117,11 @@ public class CollectionQueryProvider {
               collection,
               tableProperties.booleanValueColumnName(),
               STORAGE_ATTACHED_INDEX_CLASS));
+      // Create vector index with cosine similarity for ANN search
+      // Note: This requires Cassandra 5.0 with SAI support for vector types
+      indexQueries.add(
+          createVectorIndexQuery(
+              namespace, collection, tableProperties.vectorValueColumnName(), "cosine"));
     } else {
       indexQueries.add(
           createIndexQuery(namespace, collection, tableProperties.leafColumnName(), null));
@@ -126,6 +131,7 @@ public class CollectionQueryProvider {
           createIndexQuery(namespace, collection, tableProperties.doubleValueColumnName(), null));
       indexQueries.add(
           createIndexQuery(namespace, collection, tableProperties.booleanValueColumnName(), null));
+      // Skip vector index for non-SAI deployments as it requires SAI for ANN search
     }
 
     return indexQueries;
@@ -144,6 +150,27 @@ public class CollectionQueryProvider {
         .custom(customIndexClass)
         .parameters(parameters)
         .build();
+  }
+
+  private QueryOuterClass.Query createVectorIndexQuery(
+      String keyspaceName, String tableName, String vectorColumn, String similarityFunction) {
+    QueryOuterClass.QueryParameters parameters = getQueryParameters();
+
+    // For Cassandra 5.0 SAI vector indexes, we need to create an index with similarity function
+    // The syntax is: CREATE CUSTOM INDEX ON table(column) USING 'StorageAttachedIndex'
+    // WITH OPTIONS = {'similarity_function': 'cosine'}
+    String indexName = "idx_" + tableName + "_" + vectorColumn;
+    String cql =
+        String.format(
+            "CREATE CUSTOM INDEX IF NOT EXISTS %s ON %s.%s(%s) USING '%s' WITH OPTIONS = {'similarity_function': '%s'}",
+            indexName,
+            keyspaceName,
+            tableName,
+            vectorColumn,
+            STORAGE_ATTACHED_INDEX_CLASS,
+            similarityFunction);
+
+    return QueryOuterClass.Query.newBuilder().setCql(cql).setParameters(parameters).build();
   }
 
   // constructs parameters for the queries in this provider

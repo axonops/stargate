@@ -41,6 +41,7 @@ import io.stargate.bridge.proto.StargateBridgeGrpc;
 import io.stargate.bridge.service.interceptors.NewConnectionInterceptor;
 import io.stargate.db.AuthenticatedUser;
 import io.stargate.db.schema.Column;
+import io.stargate.db.schema.SchemaBuilder;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -68,16 +69,15 @@ public class SchemaOperationsTest extends BaseBridgeServiceTest {
     when(persistence.decorateKeyspaceName(eq("my_keyspace"), headers.capture()))
         .thenReturn("my_keyspace_decorated");
 
-    io.stargate.db.schema.Schema schema =
-        io.stargate.db.schema.Schema.build()
-            .keyspace("my_keyspace_decorated")
-            .table("my_table")
-            .column("key", Column.Type.Text, PartitionKey)
-            .column("leaf", Column.Type.Text, Clustering)
-            .column("text_value", Column.Type.Text, Static)
-            .column("dbl_value", Column.Type.Double)
-            .column("bool_value", Column.Type.Boolean)
-            .build();
+    SchemaBuilder builder = io.stargate.db.schema.Schema.build();
+    builder.keyspace("my_keyspace_decorated");
+    builder.table("my_table");
+    builder.column("key", Column.Type.Text, PartitionKey);
+    builder.column("leaf", Column.Type.Text, Clustering);
+    builder.column("text_value", Column.Type.Text, Static);
+    builder.column("dbl_value", Column.Type.Double);
+    builder.column("bool_value", Column.Type.Boolean);
+    io.stargate.db.schema.Schema schema = builder.build();
 
     when(persistence.schema()).thenReturn(schema);
     when(persistence.newConnection(any())).thenReturn(connection);
@@ -158,17 +158,16 @@ public class SchemaOperationsTest extends BaseBridgeServiceTest {
     StargateBridgeGrpc.StargateBridgeBlockingStub stub = makeBlockingStub();
     when(persistence.decorateKeyspaceName(any(String.class), any())).thenReturn("ks");
 
-    io.stargate.db.schema.Schema schema =
-        io.stargate.db.schema.Schema.build()
-            .keyspace("ks")
-            .table("tbl")
-            .column("a", Column.Type.Int, PartitionKey)
-            .column("b", Column.Type.Text)
-            .column("c", Column.Type.Uuid)
-            .column("d", Column.Type.Text)
-            .secondaryIndex("byB")
-            .column("b")
-            .build();
+    SchemaBuilder builder = io.stargate.db.schema.Schema.build();
+    builder.keyspace("ks");
+    builder.table("tbl");
+    builder.column("a", Column.Type.Int, PartitionKey);
+    builder.column("b", Column.Type.Text);
+    builder.column("c", Column.Type.Uuid);
+    builder.column("d", Column.Type.Text);
+    builder.secondaryIndex("byB");
+    builder.column("b");
+    io.stargate.db.schema.Schema schema = builder.build();
 
     when(persistence.schema()).thenReturn(schema);
     startServer(persistence);
@@ -203,18 +202,17 @@ public class SchemaOperationsTest extends BaseBridgeServiceTest {
     StargateBridgeGrpc.StargateBridgeBlockingStub stub = makeBlockingStub();
     when(persistence.decorateKeyspaceName(any(String.class), any())).thenReturn("my_stuff");
 
-    io.stargate.db.schema.Schema schema =
-        io.stargate.db.schema.Schema.build()
-            .keyspace("my_stuff")
-            .table("base_table")
-            .column("a", Column.Type.Int, PartitionKey)
-            .column("b", Column.Type.Text)
-            .column("c", Column.Type.Uuid)
-            .materializedView("byB")
-            .column("b", PartitionKey)
-            .column("a", Clustering, DESC)
-            .column("c")
-            .build();
+    SchemaBuilder builder = io.stargate.db.schema.Schema.build();
+    builder.keyspace("my_stuff");
+    builder.table("base_table");
+    builder.column("a", Column.Type.Int, PartitionKey);
+    builder.column("b", Column.Type.Text);
+    builder.column("c", Column.Type.Uuid);
+    builder.materializedView("byB");
+    builder.column("b", PartitionKey);
+    builder.column("a", Clustering, DESC);
+    builder.column("c");
+    io.stargate.db.schema.Schema schema = builder.build();
 
     when(persistence.schema()).thenReturn(schema);
     startServer(persistence);

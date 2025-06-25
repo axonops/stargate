@@ -30,7 +30,7 @@ import io.stargate.it.http.RestUtils;
 import io.stargate.it.storage.StargateConnectionInfo;
 import io.stargate.it.storage.StargateParameters;
 import io.stargate.it.storage.StargateSpec;
-import io.stargate.testing.TestingServicesActivator;
+import io.stargate.testing.TestingServicesModule;
 import io.stargate.testing.metrics.FixedClientInfoTagProvider;
 import java.io.IOException;
 import java.time.Duration;
@@ -62,8 +62,8 @@ public class ClientMetricsTest extends BaseIntegrationTest {
   @SuppressWarnings("unused") // referenced in @StargateSpec
   public static void buildParameters(StargateParameters.Builder builder) {
     builder.putSystemProperties(
-        TestingServicesActivator.CLIENT_INFO_TAG_PROVIDER_PROPERTY,
-        TestingServicesActivator.FIXED_TAG_PROVIDER);
+        TestingServicesModule.CLIENT_INFO_TAG_PROVIDER_PROPERTY,
+        TestingServicesModule.FIXED_TAG_PROVIDER);
   }
 
   @BeforeAll

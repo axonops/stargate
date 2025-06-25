@@ -216,11 +216,8 @@ public class RestApiV2QSchemaKeyspacesIT extends RestApiV2QIntegrationTestBase {
   // Verify that attempts to use non-existing DC produce useful fail message
   @Test
   public void keyspaceCreateWithInvalidDC() {
-    // 08-Dec-2022, tatu: Alas, neither C-3.11 nor DSE appear to ever validate DC (either it
-    //   defaults to valid one, or just fails KS create quietly).
-    //   So for now limit test to C-4.0
-    assumeThat(IntegrationTestUtils.isCassandra40())
-        .as("Test only applicable to C-4.x backend")
+    assumeThat(IntegrationTestUtils.isCassandra50())
+        .as("Test only applicable to C-5.x backend")
         .isTrue();
 
     final String invalidDC = "noSuchDC";

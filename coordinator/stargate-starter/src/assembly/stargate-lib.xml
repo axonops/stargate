@@ -9,9 +9,6 @@
     <dependencySet>
       <unpack>false</unpack>
       <scope>runtime</scope>
-      <excludes>
-        <exclude>org.apache.felix:org.apache.felix.framework</exclude>
-      </excludes>
     </dependencySet>
   </dependencySets>
 </assembly>

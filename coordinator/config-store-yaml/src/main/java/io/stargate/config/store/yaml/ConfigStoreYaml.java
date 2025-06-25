@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ConfigStoreYaml implements ConfigStore {
-  private static final Logger logger = LoggerFactory.getLogger(ConfigStoreActivator.class);
+  private static final Logger logger = LoggerFactory.getLogger(ConfigStoreYaml.class);
 
   private static final ObjectMapper mapper = new YAMLMapper();
   private final Path configFilePath;

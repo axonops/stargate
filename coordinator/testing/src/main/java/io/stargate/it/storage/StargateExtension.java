@@ -81,8 +81,6 @@ public class StargateExtension extends ExternalResource<StargateSpec, StargateEx
   private static final String PERSISTENCE_MODULE =
       System.getProperty("stargate.test.persistence.module");
 
-  private static final boolean ENABLE_DSE_V2_PROTOCOL = Boolean.getBoolean("stargate.enable.dsev2");
-
   public static final File LIB_DIR = initLibDir();
   private static final int MAX_NODES = 20;
 
@@ -398,15 +396,6 @@ public class StargateExtension extends ExternalResource<StargateSpec, StargateEx
       cmd.addArgument("-Dstargate.libdir=" + LIB_DIR.getAbsolutePath());
       cmd.addArgument("-Dstargate.bundle.cache.dir=" + cacheDir.getAbsolutePath());
 
-      if (backend.isDse()) {
-        cmd.addArgument("-Dstargate.request_timeout_in_ms=60000");
-        cmd.addArgument("-Dstargate.write_request_timeout_in_ms=60000");
-        cmd.addArgument("-Dstargate.read_request_timeout_in_ms=60000");
-        if (ENABLE_DSE_V2_PROTOCOL) {
-          cmd.addArgument("-Dstargate.enable_dse_protocol_v2=true");
-        }
-      }
-
       cmd.addArgument("-Dstargate.enable_user_defined_functions=true");
 
       for (Entry<String, String> e : params.systemProperties().entrySet()) {
@@ -634,10 +623,6 @@ public class StargateExtension extends ExternalResource<StargateSpec, StargateEx
       args.add(backend.datacenter());
       args.add("--rack");
       args.add(backend.rack());
-
-      if (backend.isDse()) {
-        args.add("--dse");
-      }
 
       return args;
     }

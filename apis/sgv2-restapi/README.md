@@ -9,18 +9,31 @@ All issues related to this project are marked with the `stargate-v2` and `REST` 
 REST API runs as a [Quarkus](https://quarkus.io/) service, different from Stargate V1 APIs which were built on the DropWizard framework.
 
 ##### Table of Contents
-* [Concepts](#concepts)
-    * [Shared concepts](#shared-concepts)
-* [Deployment](#deployment)
-    * [Running the service](#running-the-service)
-    * [Configuration properties](#configuration-properties)
-* [Development guide](#development-guide)
-    * [Running the application in dev mode](#running-the-application-in-dev-mode)
-    * [Running integration tests](#running-integration-tests)
-    * [Packaging and running the application](#packaging-and-running-the-application)
-    * [Creating a native executable](#creating-a-native-executable)
-    * [Creating a docker image](#creating-a-docker-image)
-* [Quarkus Extensions](#quarkus-extensions)
+- [Stargate REST API (Stargate V2)](#stargate-rest-api-stargate-v2)
+        - [Table of Contents](#table-of-contents)
+  - [Concepts](#concepts)
+    - [Shared concepts](#shared-concepts)
+  - [Deployment](#deployment)
+    - [Running the Service](#running-the-service)
+    - [Configuration properties](#configuration-properties)
+  - [Development guide](#development-guide)
+    - [Running the application in dev mode](#running-the-application-in-dev-mode)
+      - [Debugging](#debugging)
+    - [Running integration tests](#running-integration-tests)
+      - [Data store selection](#data-store-selection)
+      - [Running from IDE](#running-from-ide)
+      - [Executing against a running application](#executing-against-a-running-application)
+      - [Skipping integration tests](#skipping-integration-tests)
+      - [Skipping unit tests](#skipping-unit-tests)
+      - [Troubleshooting failure to run ITs](#troubleshooting-failure-to-run-its)
+    - [Packaging and running the application](#packaging-and-running-the-application)
+    - [Creating a native executable](#creating-a-native-executable)
+    - [Creating a Docker image](#creating-a-docker-image)
+  - [Quarkus Extensions](#quarkus-extensions)
+    - [`quarkus-arc`](#quarkus-arc)
+    - [`quarkus-container-image-docker`](#quarkus-container-image-docker)
+    - [`quarkus-smallrye-health`](#quarkus-smallrye-health)
+    - [`quarkus-smallrye-openapi`](#quarkus-smallrye-openapi)
 
 ## Concepts
 
@@ -97,7 +110,7 @@ See [Debugging](https://quarkus.io/guides/maven-tooling#debugging) for more info
 > **Warning**  
 > You need to build the coordinator docker image(s) first. In the Stargate repo directory `/apis` run:
 > ```
-> ../mvnw clean install -P dse -DskipTests && ./build_docker_images.sh
+> ../mvnw clean install -DskipTests && ./build_docker_images.sh
 > ```
 
 Integration tests are using the [Testcontainers](https://www.testcontainers.org/) library in order to set up all needed dependencies, a Stargate coordinator and a Cassandra data store.
@@ -111,14 +124,12 @@ They are separated from the unit tests and are running as part of the `integrati
 Depending on the active profile, integration tests will target different Cassandra version as the data store.
 The available profiles are:
 
-* `cassandra-40` (enabled by default) - runs integration tests with [Cassandra 4.0](https://cassandra.apache.org/doc/4.0/index.html) as the data store
-* `cassandra-311` - runs integration tests with [Cassandra 3.11](https://cassandra.apache.org/doc/3.11/index.html) as the data store
-* `dse-68` - runs integration tests with [DataStax Enterprise (DSE) 6.8](https://docs.datastax.com/en/dse/6.8/dse-dev/index.html) as the data store
+* `cassandra-50` (enabled by default) - runs integration tests with [Cassandra 5.0](https://cassandra.apache.org/doc/5.0/index.html) as the data store
 
 The required profile can be activated using the `-P` option:
 
 ```shell script
-../mvnw integration-test -P cassandra-311
+../mvnw integration-test -P cassandra-50
 ```
 
 #### Running from IDE
@@ -126,7 +137,7 @@ The required profile can be activated using the `-P` option:
 > **Warning**  
 > You need to build the coordinator docker image(s) first. In the Stargate repo directory `/apis` run:
 > ```
-> ../mvnw clean install -P dse -DskipTests && ./build_docker_images.sh
+> ../mvnw clean install-DskipTests && ./build_docker_images.sh
 > ```
 
 Running integration tests from an IDE is supported out of the box.
@@ -134,9 +145,8 @@ The tests will use the Cassandra 4.0 as the data store by default.
 Running a test with a different version of the data store or the Stargate coordinator requires changing the run configuration and specifying the following system properties:
 
 * `testing.containers.cassandra-image` - version of the Cassandra docker image to use, for example: `cassandra:4.0.4`
-* `testing.containers.stargate-image` - version of the Stargate coordinator docker image to use, for example: `stargateio/coordinator-4_0:v2.0.1` (must be V2 coordinator for the target data store)
-* `testing.containers.cluster-version` - version of the cluster, for example: `4.0` (should be one of `3.11`, `4.0` or `6.8`)
-* `testing.containers.cluster-dse` - optional and only needed if DSE is used
+* `testing.containers.stargate-image` - version of the Stargate coordinator docker image to use, for example: `stargateio/coordinator-5_0:v2.0.1` (must be V2 coordinator for the target data store)
+* `testing.containers.cluster-version` - version of the cluster, for example: `5.0` (should be one of `5.0`)
 
 #### Executing against a running application
 

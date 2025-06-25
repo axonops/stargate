@@ -28,7 +28,7 @@ import io.stargate.core.metrics.api.HttpMetricsTagProvider;
 import io.stargate.core.metrics.api.Metrics;
 import io.stargate.db.Persistence;
 import io.stargate.db.datastore.DataStoreFactory;
-import io.stargate.graphql.GraphqlActivator;
+import io.stargate.graphql.GraphqlModule;
 import io.stargate.graphql.web.resources.AdminResource;
 import io.stargate.graphql.web.resources.AuthenticationFilter;
 import io.stargate.graphql.web.resources.DdlResource;
@@ -46,8 +46,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ServerProperties;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
 
 public class DropwizardServer extends Application<Configuration> {
 
@@ -124,15 +122,6 @@ public class DropwizardServer extends Application<Configuration> {
 
     environment
         .jersey()
-        .register(
-            new AbstractBinder() {
-              @Override
-              protected void configure() {
-                bind(FrameworkUtil.getBundle(GraphqlActivator.class)).to(Bundle.class);
-              }
-            });
-    environment
-        .jersey()
         .register(new AuthenticationFilter(authenticationService, dataStoreFactory));
     environment
         .jersey()
@@ -161,7 +150,7 @@ public class DropwizardServer extends Application<Configuration> {
         new MetricsBinder(
             metrics,
             httpMetricsTagProvider,
-            GraphqlActivator.MODULE_NAME,
+            GraphqlModule.MODULE_NAME,
             Arrays.asList(NON_API_URI_REGEX));
     metricsBinder.register(environment.jersey());
 
@@ -177,8 +166,8 @@ public class DropwizardServer extends Application<Configuration> {
   public void initialize(final Bootstrap<Configuration> bootstrap) {
     super.initialize(bootstrap);
     bootstrap.setConfigurationSourceProvider(
-        new StargateV1ConfigurationSourceProvider(GraphqlActivator.MODULE_NAME));
-    bootstrap.setMetricRegistry(metrics.getRegistry(GraphqlActivator.MODULE_NAME));
+        new StargateV1ConfigurationSourceProvider(GraphqlModule.MODULE_NAME));
+    bootstrap.setMetricRegistry(metrics.getRegistry(GraphqlModule.MODULE_NAME));
     bootstrap.addBundle(new MultiPartBundle());
   }
 

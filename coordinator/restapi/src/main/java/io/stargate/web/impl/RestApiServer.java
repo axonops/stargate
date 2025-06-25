@@ -63,8 +63,6 @@ import javax.servlet.FilterRegistration;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ServerProperties;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -211,15 +209,6 @@ public class RestApiServer extends Application<RestApiServerConfiguration> {
     }
 
     // Swagger endpoints
-    environment
-        .jersey()
-        .register(
-            new AbstractBinder() {
-              @Override
-              protected void configure() {
-                bind(FrameworkUtil.getBundle(RestApiActivator.class)).to(Bundle.class);
-              }
-            });
     environment.jersey().register(SwaggerSerializers.class);
     environment.jersey().register(ApiListingResource.class);
     environment.jersey().register(SwaggerUIResource.class);
@@ -230,7 +219,7 @@ public class RestApiServer extends Application<RestApiServerConfiguration> {
         new MetricsBinder(
             metrics,
             httpMetricsTagProvider,
-            RestApiActivator.MODULE_NAME,
+            RestApiService.MODULE_NAME,
             Arrays.asList(NON_API_URI_REGEX));
     metricsBinder.register(environment.jersey());
 
@@ -248,8 +237,8 @@ public class RestApiServer extends Application<RestApiServerConfiguration> {
   public void initialize(final Bootstrap<RestApiServerConfiguration> bootstrap) {
     super.initialize(bootstrap);
     bootstrap.setConfigurationSourceProvider(
-        new StargateV1ConfigurationSourceProvider(RestApiActivator.MODULE_NAME));
-    bootstrap.setMetricRegistry(metrics.getRegistry(RestApiActivator.MODULE_NAME));
+        new StargateV1ConfigurationSourceProvider(RestApiService.MODULE_NAME));
+    bootstrap.setMetricRegistry(metrics.getRegistry(RestApiService.MODULE_NAME));
   }
 
   private void enableCors(Environment environment) {

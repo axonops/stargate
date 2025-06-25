@@ -46,13 +46,13 @@ public class DeleteSubDocumentKeysQueryBuilder extends DeleteSubDocumentPathQuer
 
   /** {@inheritDoc} */
   @Override
-  protected Consumer<QueryBuilder.QueryBuilder__40> whereConsumer() {
+  protected Consumer<QueryBuilder> whereConsumer() {
     int subPathSize = subDocumentPath.size();
     if (subPathSize + 1 > maxDepth) {
       throw new ErrorCodeRuntimeException(ErrorCode.DOCS_API_GENERAL_DEPTH_EXCEEDED);
     }
 
-    Consumer<QueryBuilder.QueryBuilder__40> superConsumer = super.whereConsumer();
+    Consumer<QueryBuilder> superConsumer = super.whereConsumer();
     return where -> {
       superConsumer.accept(where);
 

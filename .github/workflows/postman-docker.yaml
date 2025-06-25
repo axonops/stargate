@@ -24,15 +24,11 @@ jobs:
       # collection - Postman collection to run
 
       matrix:
-        backend: [ cassandra-40, cassandra-311, dse-68 ]
+        backend: [ cassandra-50 ]
         collection: [ docsapi-library, graphqlapi-library, restapi-users ]
         include:
-          - backend: cassandra-40
-            path: docker-compose/cassandra-4.0
-          - backend: cassandra-311
-            path: docker-compose/cassandra-3.11
-          - backend: dse-68
-            path: docker-compose/dse-6.8
+          - backend: cassandra-50
+            path: docker-compose/cassandra-5.0
           - collection: docsapi-library
             collection-id: 12949543-caba2a02-6559-486a-9e4a-d5c0791fd296
             environment-id: 12949543-2e78cf27-bd8c-43f2-909f-70a2b87d65fe
